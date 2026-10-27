@@ -11,7 +11,11 @@ async function setup(page, { files = SEED, autosave = true, colorScheme } = {}) 
   const gh = createFakeGitHub({ files });
   const problems = [];
   page.on('pageerror', e => problems.push(`pageerror: ${e.message}`));
-  page.on('console', m => { if (m.type() === 'error') problems.push(`console: ${m.text()}`); });
+  page.on('console', m => {
+    // The browser logs GitHub's expected 409 "conflict" replies; those are handled by the app.
+    if (m.type() === 'error' && !/status of 409/.test(m.text())) problems.push(`console: ${m.text()}`);
+  });
+  page.__problems = problems;
   await page.route('https://api.github.com/**', async route => {
     const req = route.request();
     let body = null;
@@ -32,6 +36,17 @@ async function setup(page, { files = SEED, autosave = true, colorScheme } = {}) 
   await expect(page.locator('.cb-status')).toHaveClass(/is-saved/);
   return { gh, problems };
 }
+
+// On failure, keep the page's content and any errors so they can be reviewed.
+test.afterEach(async ({ page }, info) => {
+  if (info.status === info.expectedStatus) return;
+  const name = `${info.project.name}-${info.title.replace(/[^a-z0-9]+/gi, '-').slice(0, 60)}`;
+  fs.mkdirSync('test-output/failures', { recursive: true });
+  try { await page.screenshot({ path: `test-output/failures/${name}.png` }); } catch { /* page gone */ }
+  let html = '';
+  try { html = await page.locator('#cb-page').innerHTML({ timeout: 2000 }); } catch { /* ignore */ }
+  fs.writeFileSync(`test-output/failures/${name}.txt`, `${(page.__problems || []).join('\n')}\n\n---- #cb-page ----\n${html.slice(0, 20000)}`);
+});
 
 const shot = (page, name, info) => page.screenshot({ path: `${SHOTS}/${info.project.name}-${name}.png` });
 const openNote = (page, title) => page.locator('.cb-item', { hasText: title }).first().click();

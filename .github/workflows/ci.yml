@@ -52,7 +52,6 @@ jobs:
           cp -r test-output/. /tmp/results/ 2>/dev/null || true
           cp package-lock.json /tmp/results/ 2>/dev/null || true
           mkdir -p /tmp/results/failures
-          find test-results -name '*.png' -exec cp {} /tmp/results/failures/ \; 2>/dev/null || true
           echo "${{ github.sha }} ${{ steps.e2e.outcome }}" > /tmp/results/STATUS
           cd /tmp/results
           git init -q
