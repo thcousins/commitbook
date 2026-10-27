@@ -59,7 +59,26 @@ export const Sheet = Node.create({
   addNodeView() {
     return ({ node, editor, getPos }) => {
       let current = node;
-      const view = new SheetView({
+      let view;
+      try {
+        view = makeView();
+      } catch (err) {
+        // Never let a spreadsheet stop the note from opening: show the table as text.
+        console.error('Spreadsheet failed to load', err);
+        const dom = document.createElement('div');
+        dom.className = 'cb-sheet cb-sheet-broken';
+        dom.contentEditable = 'false';
+        const msg = document.createElement('p');
+        msg.textContent = 'This spreadsheet couldn’t be displayed, so here it is as text. It is saved unchanged.';
+        const pre = document.createElement('pre');
+        pre.textContent = writeSheet(node.attrs.data || emptySheet());
+        dom.append(msg, pre);
+        return { dom, ignoreMutation: () => true, stopEvent: () => true, update: next => next.type === current.type };
+      }
+      return wire(view);
+
+      function makeView() {
+        return new SheetView({
         data: node.attrs.data,
         editable: editor.isEditable,
         onChange: data => {
@@ -69,6 +88,9 @@ export const Sheet = Node.create({
           editor.view.dispatch(editor.view.state.tr.setNodeMarkup(pos, undefined, { ...current.attrs, data }));
         },
       });
+      }
+
+      function wire(view) {
       view.onRemove = () => {
         const pos = typeof getPos === 'function' ? getPos() : null;
         if (pos == null) return;
@@ -94,6 +116,7 @@ export const Sheet = Node.create({
         deselectNode() { view.dom.classList.remove('is-selected'); },
         destroy: () => view.destroy(),
       };
+      }
     };
   },
 });

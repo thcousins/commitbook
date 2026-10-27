@@ -10,7 +10,7 @@ import 'jsuites/dist/jsuites.css';
 import 'jspreadsheet-ce/dist/jspreadsheet.css';
 import 'jspreadsheet-ce/dist/jspreadsheet.themes.css';
 import { HyperFormula } from 'hyperformula';
-import { formatValue, FORMATS, isNumericLooking } from '../lib/format.js';
+import { formatValue, FORMATS, isNumericLooking, toNumber } from '../lib/format.js';
 import { sortRows, mapRowRefs } from '../lib/refs.js';
 import { emptySheet } from '../lib/sheetmd.js';
 import { esc } from '../lib/util.js';
@@ -20,7 +20,6 @@ import { ask } from '../ui/dialogs.js';
 const HF_CONFIG = {
   licenseKey: 'gpl-v3',
   currencySymbol: ['£', '$', '€'],
-  thousandSeparator: ',',
   decimalSeparator: '.',
   functionArgSeparator: ',',
   dateFormats: ['DD/MM/YYYY', 'DD/MM/YY', 'YYYY-MM-DD'],
@@ -181,9 +180,9 @@ export class SheetView {
   recalc() {
     const s = this.sheet;
     try {
-      this.hf.setSheetContent(0, s.rows.map(r => r.map(v => (v === '' ? null : v))));
+      this.hf.setSheetContent(0, this.hfData());
     } catch {
-      this.hf = HyperFormula.buildFromArray(s.rows, HF_CONFIG);
+      this.hf = HyperFormula.buildFromArray(this.hfData(), HF_CONFIG);
     }
     for (let y = 0; y < s.rows.length; y++) {
       for (let x = 0; x < s.columns.length; x++) {
@@ -193,6 +192,16 @@ export class SheetView {
     }
     this.renderTotals();
     this.updateCount();
+  }
+
+  /** Data for the formula engine: typed numbers like "£1,234.50" become numbers. */
+  hfData() {
+    return this.sheet.rows.map(r => r.map(v => {
+      if (v === '') return null;
+      if (isFormula(v)) return v;
+      const n = toNumber(v);
+      return n === null ? v : n;
+    }));
   }
 
   valueAt(x, y) {
