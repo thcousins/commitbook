@@ -10,6 +10,17 @@ test.describe.configure({ mode: 'serial' });
 test.use({ baseURL: HOSTED });
 test.skip(({ browserName }) => browserName !== 'chromium', 'one browser is enough for the server side');
 
+async function signIn(page) {
+  await page.goto('/');
+  await page.waitForSelector('#cb-login, .cb-app');
+  if (await page.locator('#cb-login').count()) {
+    await page.fill('#username', 'tom');
+    await page.fill('#password', 'a long test password');
+    await page.click('#cb-login button');
+  }
+  await expect(page.locator('.cb-folder-row', { hasText: 'House' })).toBeVisible();
+}
+
 const files = async () => (await fetch(`${FAKE}/__files`)).json();
 const shot = (page, name) => page.screenshot({ path: `${SHOTS}/hosted-${name}.png` });
 
@@ -39,7 +50,7 @@ test('first-time setup page', async ({ page }) => {
 });
 
 test('edit a note through the server', async ({ page }) => {
-  await page.goto('/');
+  await signIn(page);
   await page.locator('.cb-item', { hasText: 'Gift ideas' }).click();
   await page.locator('#cb-editor .tiptap').click();
   await page.keyboard.press('ControlOrMeta+End');
@@ -49,7 +60,7 @@ test('edit a note through the server', async ({ page }) => {
 });
 
 test('sign out, then sign in with the sign-in page', async ({ page }) => {
-  await page.goto('/');
+  await signIn(page);
   await page.locator('#cb-menu').click();
   await page.locator('.cb-pop-item', { hasText: 'Sign out' }).click();
   await expect(page.locator('#cb-login')).toBeVisible();
@@ -73,7 +84,7 @@ test('sign out, then sign in with the sign-in page', async ({ page }) => {
 });
 
 test('server settings dialog', async ({ page }) => {
-  await page.goto('/');
+  await signIn(page);
   await page.locator('#cb-menu').click();
   await page.locator('.cb-pop-item', { hasText: 'Sign-in and GitHub settings' }).click();
   await page.fill('#cb-ss input[name="currentPassword"]', 'wrong');
