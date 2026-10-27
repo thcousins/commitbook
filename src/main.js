@@ -64,7 +64,7 @@ function signInScreen(server) {
         <label class="cb-field"><span>Password</span>
           <input id="password" name="password" type="password" autocomplete="current-password" required></label>
         <label class="cb-check"><input type="checkbox" name="remember" value="1" checked> Keep me signed in on this device</label>
-        <p class="cb-error" ${message ? '' : 'hidden'} role="alert">${esc(message)}</p>
+        <p class="${status || locked ? 'cb-error' : 'cb-info'}" ${message ? '' : 'hidden'} role="${status || locked ? 'alert' : 'status'}">${esc(message)}</p>
         <button class="cb-btn cb-btn-primary cb-btn-wide" ${locked ? 'disabled' : ''}>Sign in</button>
       </form>
     </div>`;

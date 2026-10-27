@@ -364,6 +364,7 @@ code { font-family: var(--mono); font-size: 0.88em; }
 .cb-field input:focus { outline: 2px solid var(--accent); outline-offset: -1px; border-color: transparent; }
 .cb-help { font-size: 12.5px; color: var(--faint); margin: 0; }
 .cb-error { color: var(--danger); font-size: 13.5px; margin: 0 0 10px; }
+.cb-info { color: var(--muted); font-size: 13.5px; margin: 0 0 10px; }
 .cb-pick { display: grid; gap: 1px; max-height: 50vh; overflow-y: auto; border: 1px solid var(--line); border-radius: 9px; padding: 4px; }
 .cb-pick-item { border: 0; background: transparent; text-align: left; padding: 8px 12px; border-radius: 6px; cursor: pointer; font-size: 14px; }
 .cb-pick-item:hover, .cb-pick-item:focus-visible { background: var(--accent-soft); outline: none; }

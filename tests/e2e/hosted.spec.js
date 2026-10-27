@@ -64,7 +64,7 @@ test('sign out, then sign in with the sign-in page', async ({ page }) => {
   await page.locator('#cb-menu').click();
   await page.locator('.cb-pop-item', { hasText: 'Sign out' }).click();
   await expect(page.locator('#cb-login')).toBeVisible();
-  await expect(page.locator('.cb-error')).toContainText('signed out');
+  await expect(page.locator('.cb-info')).toContainText('signed out');
   // Built for password managers: a real form with the standard field names.
   await expect(page.locator('#cb-login')).toHaveAttribute('method', 'post');
   await expect(page.locator('#username')).toHaveAttribute('autocomplete', 'username');
