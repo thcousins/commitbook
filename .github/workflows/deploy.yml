@@ -1,0 +1,101 @@
+name: Deploy
+
+# Publishes the built app. The app contains no notes (they stay in each person's
+# own private repository), so it's safe to host publicly.
+#
+# * GitHub Pages: turn on in Settings → Pages → Source: "GitHub Actions".
+# * Your own web hosting over SSH (optional): add these repository secrets
+#     DEPLOY_HOST, DEPLOY_USER, DEPLOY_PATH, DEPLOY_SSH_KEY (and DEPLOY_PORT if not 22).
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: deploy
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: if [ -f package-lock.json ]; then npm ci; else npm install --no-audit --no-fund; fi
+      - run: npm run build
+      - uses: actions/upload-artifact@v7
+        with:
+          name: app
+          path: dist
+          retention-days: 7
+      - name: Check whether GitHub Pages is turned on
+        id: pages
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if gh api "repos/${{ github.repository }}/pages" --jq .build_type 2>/dev/null | grep -q workflow; then
+            echo "enabled=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "::notice::GitHub Pages isn't turned on (Settings → Pages → Source: GitHub Actions), so that step is skipped."
+            echo "enabled=false" >> "$GITHUB_OUTPUT"
+          fi
+      - uses: actions/upload-pages-artifact@v5
+        if: steps.pages.outputs.enabled == 'true'
+        with:
+          path: dist
+    outputs:
+      pages: ${{ steps.pages.outputs.enabled }}
+
+  pages:
+    needs: build
+    if: needs.build.outputs.pages == 'true'
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/deploy-pages@v5
+        id: deployment
+
+  ssh:
+    needs: build
+    runs-on: ubuntu-latest
+    env:
+      HOST: ${{ secrets.DEPLOY_HOST }}
+      USER: ${{ secrets.DEPLOY_USER }}
+      TARGET: ${{ secrets.DEPLOY_PATH }}
+      PORT: ${{ secrets.DEPLOY_PORT || '22' }}
+      HAS_KEY: ${{ secrets.DEPLOY_SSH_KEY != '' }}
+    steps:
+      - name: Check deploy is configured
+        id: check
+        run: |
+          if [ -n "$HOST" ] && [ -n "$USER" ] && [ -n "$TARGET" ] && [ "$HAS_KEY" = "true" ]; then echo "ready=true" >> "$GITHUB_OUTPUT"
+          else echo "::notice::SSH deploy secrets not set; skipping."; echo "ready=false" >> "$GITHUB_OUTPUT"; fi
+      - uses: actions/download-artifact@v8
+        if: steps.check.outputs.ready == 'true'
+        with:
+          name: app
+          path: dist
+      - name: Upload over SSH
+        if: steps.check.outputs.ready == 'true'
+        env:
+          SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
+        run: |
+          HOST=$(printf '%s' "$HOST" | tr -d '[:space:]'); USER=$(printf '%s' "$USER" | tr -d '[:space:]')
+          TARGET=$(printf '%s' "$TARGET" | tr -d '\r\n' | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//' -e 's#^/*##' -e 's#/*$##')
+          mkdir -p ~/.ssh && chmod 700 ~/.ssh
+          printf '%s\n' "$SSH_KEY" > ~/.ssh/id_deploy && chmod 600 ~/.ssh/id_deploy
+          ssh-keyscan -T 15 -p "$PORT" "$HOST" > ~/.ssh/known_hosts 2>/dev/null
+          SSH="ssh -p $PORT -i ~/.ssh/id_deploy -o BatchMode=yes"
+          if ! $SSH "$USER@$HOST" "test -d \"$TARGET\""; then echo "::error::Folder '$TARGET' not found on the server."; exit 1; fi
+          rsync -az --delete --exclude '.htaccess' --exclude '.well-known/' -e "$SSH" dist/ "$USER@$HOST:$TARGET/"
+          echo "::notice::Deployed to $TARGET"

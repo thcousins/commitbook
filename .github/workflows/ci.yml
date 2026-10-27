@@ -1,0 +1,67 @@
+name: Test
+
+# Builds the app and runs the unit and browser tests against a fake GitHub
+# (no real data is touched). Screenshots and logs are published to the
+# `ci-results` branch so they can be reviewed without downloading artifacts.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: test-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: write
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Install
+        run: |
+          if [ -f package-lock.json ]; then npm ci; else npm install --no-audit --no-fund; fi
+      - name: Unit tests
+        run: |
+          mkdir -p test-output
+          npm run test:unit 2>&1 | tee test-output/unit.log
+          exit ${PIPESTATUS[0]}
+      - name: Build
+        run: |
+          npm run build 2>&1 | tee test-output/build.log
+          exit ${PIPESTATUS[0]}
+      - name: Browser tests
+        id: e2e
+        continue-on-error: true
+        run: |
+          npx playwright install --with-deps chromium webkit > /dev/null
+          npx playwright test 2>&1 | tee test-output/e2e.log
+          exit ${PIPESTATUS[0]}
+      - name: Publish results to the ci-results branch
+        if: always() && github.event_name != 'pull_request'
+        run: |
+          mkdir -p /tmp/results
+          cp -r test-output/. /tmp/results/ 2>/dev/null || true
+          cp package-lock.json /tmp/results/ 2>/dev/null || true
+          mkdir -p /tmp/results/failures
+          find test-results -name '*.png' -exec cp {} /tmp/results/failures/ \; 2>/dev/null || true
+          echo "${{ github.sha }} ${{ steps.e2e.outcome }}" > /tmp/results/STATUS
+          cd /tmp/results
+          git init -q
+          git checkout -q -b ci-results
+          git config user.name "github-actions"
+          git config user.email "github-actions@users.noreply.github.com"
+          git add -A
+          git commit -q -m "Test results for ${{ github.sha }}"
+          git push -q -f "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git" ci-results
+      - name: Fail if browser tests failed
+        if: steps.e2e.outcome != 'success'
+        run: exit 1
