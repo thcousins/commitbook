@@ -266,7 +266,17 @@ code { font-family: var(--mono); font-size: 0.88em; }
   --border_color_highlighted: var(--accent); --cursor: color-mix(in srgb, var(--accent) 14%, transparent);
   --jss-border-color: var(--accent);
 }
-.cb-sheet.is-selected { box-shadow: 0 0 0 2px var(--accent); }
+.cb-sheet.is-selected { box-shadow: 0 0 0 2px var(--accent); border-color: var(--accent); }
+/* Just the table until you work in it (or select it). */
+.cb-sheet:not(.is-active):not(.is-selected) { border-color: transparent; background: transparent; }
+.cb-sheet:not(.is-active):not(.is-selected) .cb-sheet-bar,
+.cb-sheet:not(.is-active):not(.is-selected) .cb-fx,
+.cb-sheet:not(.is-active):not(.is-selected) .cb-fx-sig { display: none; }
+.cb-sheet-bar { cursor: pointer; }
+.cb-sheet-bar :is(button, input, label) { cursor: auto; }
+.cb-sheet-bar button { cursor: pointer; }
+.cb-grid .jss_worksheet td.cb-cell-current { box-shadow: inset 0 0 0 2px var(--accent); }
+.cb-grid .jss_worksheet td.cb-ref-pick { background: color-mix(in srgb, var(--accent) 16%, transparent); box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--accent) 60%, transparent); }
 .cb-sheet-bar { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; padding: 8px 10px; border-bottom: 1px solid var(--line); font-size: 13px; }
 .cb-sheet-label { display: inline-flex; align-items: center; gap: 6px; font-weight: 600; color: var(--muted); margin-right: 4px; }
 .cb-sheet-label .ic { width: 15px; height: 15px; color: var(--accent); }
@@ -459,3 +469,13 @@ code { font-family: var(--mono); font-size: 0.88em; }
 .cb-seg button .ic { width: 15px; height: 15px; }
 .cb-seg button:hover { color: var(--fg); }
 .cb-seg button[aria-pressed="true"] { background: var(--raise); color: var(--fg); font-weight: 600; box-shadow: 0 1px 2px rgb(0 0 0 / 0.12); }
+
+/* ---------- revision history, by day ---------- */
+.cb-days { display: grid; gap: 4px; margin-bottom: 14px; }
+.cb-day > summary { display: flex; align-items: center; gap: 6px; padding: 8px 8px; border-radius: 8px; cursor: pointer; list-style: none; font-weight: 600; font-size: 13.5px; }
+.cb-day > summary::-webkit-details-marker { display: none; }
+.cb-day > summary:hover { background: var(--side); }
+.cb-day > summary .cb-chev .ic { width: 14px; height: 14px; transition: rotate 120ms; }
+.cb-day[open] > summary .cb-chev .ic { rotate: 90deg; }
+.cb-day-label { flex: 1; }
+.cb-day .cb-versions { margin: 2px 0 6px 20px; }

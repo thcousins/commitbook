@@ -91,6 +91,19 @@ export const Sheet = Node.create({
       }
 
       function wire(view) {
+      // Clicking the spreadsheet's header bar selects the whole block (Delete then removes it).
+      view.onSelectSheet = () => {
+        const pos = typeof getPos === 'function' ? getPos() : null;
+        if (pos != null) editor.chain().focus().setNodeSelection(pos).run();
+      };
+      view.onEnterSheet = () => {
+        const pos = typeof getPos === 'function' ? getPos() : null;
+        const sel = editor.state.selection;
+        if (pos != null && sel.from === pos && sel.to === pos + current.nodeSize) {
+          editor.commands.setTextSelection(Math.min(pos + current.nodeSize, editor.state.doc.content.size));
+        }
+        if (editor.view.hasFocus()) editor.view.dom.blur();
+      };
       view.onRemove = () => {
         const pos = typeof getPos === 'function' ? getPos() : null;
         if (pos == null) return;
@@ -112,8 +125,8 @@ export const Sheet = Node.create({
           return !!(t && t.closest && t.closest('.cb-sheet'));
         },
         ignoreMutation: () => true,
-        selectNode() { view.dom.classList.add('is-selected'); },
-        deselectNode() { view.dom.classList.remove('is-selected'); },
+        selectNode() { view.setSelected(true); },
+        deselectNode() { view.setSelected(false); },
         destroy: () => view.destroy(),
       };
       }

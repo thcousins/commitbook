@@ -144,3 +144,12 @@ test('formula helper: functions and the word at the caret', async () => {
   assert.equal(functionAtCaret('="su', 4), null);          // inside quotes
   assert.equal(functionAtCaret('sum', 3), null);           // not a formula
 });
+
+test('history grouped by day', async () => {
+  const { groupByDay } = await import('../../src/lib/util.js');
+  const now = new Date(2026, 9, 27, 15, 0);
+  const at = (d, h) => ({ date: new Date(2026, 9, d, h, 0).toISOString() });
+  const g = groupByDay([at(27, 14), at(27, 9), at(26, 20), at(20, 8), at(20, 7)], now);
+  assert.deepEqual(g.map(x => [x.label, x.items.length, x.today]), [['Today', 2, true], ['Yesterday', 1, false], ['Tue 20 Oct 2026', 2, false]]);
+  assert.deepEqual(g[2].items.map(x => x.i), [3, 4]);
+});

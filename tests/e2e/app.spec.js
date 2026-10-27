@@ -206,6 +206,10 @@ test('revision history: view and restore an older version', async ({ page }, inf
   await waitSaved(page);
   await page.locator('#cb-history').click();
   await expect(page.locator('.cb-version')).toHaveCount(2);
+  // Grouped by day; the latest day is open.
+  await expect(page.locator('.cb-day')).toHaveCount(1);
+  await expect(page.locator('.cb-day summary')).toContainText('2 changes');
+  await expect(page.locator('.cb-day')).toHaveAttribute('open', '');
   await page.locator('.cb-version').nth(1).click();
   await expect(page.locator('.cb-version-title')).toHaveText('Gift ideas');
   await shot(page, '05-history', info);
@@ -406,5 +410,80 @@ test('function list and date results', async ({ page }, info) => {
   await expect(sheet.locator('tbody tr').nth(0).locator('td').nth(1)).toHaveText('03/11/2026');
   await waitSaved(page);
   expect(gh.files()['gift-ideas.md']).toContain('=DATE(2026, 11, 3)');
+  expect(problems).toEqual([]);
+});
+
+test('spreadsheet: just the table until used; select it all and delete', async ({ page }, info) => {
+  const { gh, problems } = await setup(page);
+  await page.locator('.cb-folder-row', { hasText: 'House' }).click();
+  await openNote(page, 'Kitchen renovation');
+  const sheet = page.locator('.cb-sheet');
+  await expect(sheet.locator('.cb-sheet-bar')).toBeHidden();
+  await expect(sheet.locator('.cb-fx')).toBeHidden();
+  const cell = sheet.locator('tbody tr').nth(1).locator('td').nth(1);
+  const before = await cell.boundingBox();
+  await cell.click();
+  await expect(sheet.locator('.cb-sheet-bar')).toBeVisible();
+  const after = await cell.boundingBox();
+  expect(Math.abs(after.y - before.y)).toBeLessThan(2);           // the table doesn't jump
+  // Delete in a cell clears the cell, not the spreadsheet.
+  await page.keyboard.press('Delete');
+  await expect(cell).toHaveText('');
+  await expect(sheet).toHaveCount(1);
+  // Clicking the header bar selects the whole spreadsheet.
+  await sheet.locator('.cb-sheet-label').click();
+  await expect(sheet).toHaveClass(/is-selected/);
+  await shot(page, '16-sheet-selected', info);
+  await page.keyboard.press('Delete');
+  await expect(page.locator('.cb-sheet')).toHaveCount(0);
+  await waitSaved(page);
+  expect(gh.files()['House/kitchen-renovation.md']).not.toContain('commitbook:sheet');
+  // Clicking elsewhere in a note hides the bars again.
+  await page.keyboard.press('ControlOrMeta+z');
+  await expect(page.locator('.cb-sheet')).toHaveCount(1);
+  await page.locator('#cb-title').click();
+  await expect(page.locator('.cb-sheet .cb-sheet-bar')).toBeHidden();
+  expect(problems).toEqual([]);
+});
+
+test('formula bar keeps the cell marked, and cells can be clicked into a formula', async ({ page }, info) => {
+  const { gh, problems } = await setup(page);
+  await page.locator('.cb-folder-row', { hasText: 'Car' }).click();
+  await openNote(page, 'MOT and tyres');
+  const sheet = page.locator('.cb-sheet');
+  const row = n => sheet.locator('tbody tr').nth(n);
+  await row(0).locator('td').nth(1).click();                       // A1
+  const fx = sheet.locator('.cb-fx-input');
+  await fx.click();
+  await expect(row(0).locator('td').nth(1)).toHaveClass(/cb-cell-current/);
+  await page.keyboard.press('ControlOrMeta+a');
+  await page.keyboard.type('=SUM(');
+  // Drag from C1 to C3, like Excel.
+  const c1 = await row(0).locator('td').nth(3).boundingBox();
+  const c3 = await row(2).locator('td').nth(3).boundingBox();
+  await page.mouse.move(c1.x + c1.width / 2, c1.y + c1.height / 2);
+  await page.mouse.down();
+  await page.mouse.move(c3.x + c3.width / 2, c3.y + c3.height / 2, { steps: 4 });
+  await page.mouse.up();
+  await expect(fx).toHaveValue('=SUM(C1:C3');
+  await expect(fx).toBeFocused();
+  await expect(row(1).locator('td').nth(3)).toHaveClass(/cb-ref-pick/);
+  await shot(page, '17-click-range', info);
+  // A plain click after an operator adds a single cell.
+  await page.keyboard.type(')+');
+  await row(0).locator('td').nth(4).click();                       // D1
+  await expect(fx).toHaveValue('=SUM(C1:C3)+D1');
+  // Clicking a column heading gives the whole column.
+  await page.keyboard.type('-');
+  await sheet.locator('thead td').nth(3).click();                  // C
+  await expect(fx).toHaveValue('=SUM(C1:C3)+D1-C:C');
+  await page.keyboard.press('Backspace');
+  await page.keyboard.press('Backspace');
+  await page.keyboard.press('Backspace');
+  await page.keyboard.press('Backspace');
+  await page.keyboard.press('Enter');
+  await expect(row(0).locator('td').nth(1)).toHaveText('571');      // 118+112+105 + 236
+  await waitSaved(page);
+  expect(gh.files()['Car/mot-and-tyres.md']).toContain('=SUM(C1:C3)+D1');
   expect(problems).toEqual([]);
 });

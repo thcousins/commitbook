@@ -50,7 +50,8 @@ A spreadsheet is a Markdown table with a comment line above it:
 | Total       |          | =SUM(C:C) |
 ```
 
-- The header row holds the column names. In formulas, **row 1 is the first data row**
+- The header row holds the column names. Names are optional: leave a header cell empty and
+  the app shows the column letter (A, B, C…). In formulas, **row 1 is the first data row**
   (the header isn't counted): `=C1*2`, `=SUM(C1:C2)`.
 - `totals` is how many rows at the bottom are total rows. Total rows are kept at the
   bottom, and their formulas only see the data rows, so use whole-column ranges such as
@@ -58,8 +59,10 @@ A spreadsheet is a Markdown table with a comment line above it:
 - Formulas follow Excel syntax (the app uses HyperFormula): IF, SUMIF, COUNTIF, VLOOKUP,
   ROUND, dates and so on.
 - `formats` maps a column index (0 = first column) to one of: `number`, `integer`,
-  `gbp`, `usd`, `eur`, `percent`, `text`. `widths` is a list of column widths in pixels.
-  Both are optional; keep any that are already there.
+  `gbp`, `usd`, `eur`, `percent`, `date` (27/10/2026), `datelong` (27 Oct 2026),
+  `weekday` (Tue 27 Oct 2026), `time` (14:30), `datetime`, `text`. `widths` is a list of
+  column widths in pixels. Both are optional; keep any that are already there.
+- Type dates as `27/10/2026` (or `2026-10-27`) and times as `14:30`.
 - Escape a `|` inside a cell as `\|`. Keep every row on one line.
 - When adding rows, add them above the total rows.
 

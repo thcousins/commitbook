@@ -68,5 +68,6 @@ quotes, code, links. No raw HTML. Don't repeat the title as a heading.
 ```
 
 Spreadsheets are Markdown tables preceded by `<!-- commitbook:sheet {"totals":1} -->`; the header
-row holds column names, row 1 in formulas is the first data row, and the last `totals` rows are
-total rows (use whole-column formulas such as `=SUM(C:C)`). Add new rows above the total rows.
+row holds column names (empty cells show as A, B, C), row 1 in formulas is the first data row,
+and the last `totals` rows are total rows (use whole-column formulas such as `=SUM(C:C)`). Add
+new rows above the total rows. Type dates as `27/10/2026` and times as `14:30`.

@@ -4,7 +4,7 @@
 import { Store, ConflictError, SignedOutError, TRASH } from './store.js';
 import { createEditor, getMarkdown, COMMANDS, activeStates } from './editor/editor.js';
 import { local } from './lib/cache.js';
-import { esc, friendlyDate, longDate, debounce, dirname, basename, plainText, nowIso } from './lib/util.js';
+import { esc, friendlyDate, longDate, debounce, dirname, basename, plainText, nowIso, groupByDay } from './lib/util.js';
 import { icon } from './ui/icons.js';
 import { ask, confirmBox, choose, pickFolder, toast } from './ui/dialogs.js';
 import { getTheme, setTheme } from './lib/theme.js';
@@ -481,6 +481,7 @@ class App {
     const n = this.current;
     this.destroyEditor();
     const folder = n.path ? dirname(n.path) : n.folder || '';
+    $('#cb-page').style.minHeight = '';
     $('#cb-page').innerHTML = `
       <input class="cb-title" id="cb-title" placeholder="Untitled note" aria-label="Note title" autocomplete="off" value="${esc(n.title || '')}">
       <div class="cb-meta" id="cb-meta"></div>
@@ -1040,16 +1041,33 @@ class App {
     }
     if (d.hidden) return;
     const body = $('.cb-drawer-body', d);
+    const groups = groupByDay(versions);
+    // Today is open; other days are folded up. If nothing changed today, open the latest day.
+    if (!this.openDays || this.openDaysFor !== n.path) {
+      this.openDays = new Set([groups.find(g => g.today)?.key || groups[0]?.key]);
+      this.openDaysFor = n.path;
+    }
+    const time = v => new Date(v.date).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
+    const row = ({ v, i }) => `
+      <li><button type="button" class="cb-version" data-i="${i}">
+        <span class="cb-version-date">${esc(time(v))}${i === 0 ? ' <span class="cb-badge">Current</span>' : ''}</span>
+        <span class="cb-version-msg">${esc(v.message.split('\n')[0])}</span>
+        ${v.path && v.path !== n.path ? `<span class="cb-version-path">${icon('folder')}${esc(dirname(v.path) || 'Top level')}</span>` : ''}
+      </button></li>`;
     body.innerHTML = `
       <p class="cb-text">Every save is kept. Pick a version to see it, and restore it if you want it back.</p>
-      <ol class="cb-versions">${versions.map((v, i) => `
-        <li><button type="button" class="cb-version" data-i="${i}">
-          <span class="cb-version-date">${esc(longDate(v.date))}${i === 0 ? ' <span class="cb-badge">Current</span>' : ''}</span>
-          <span class="cb-version-msg">${esc(v.message.split('\n')[0])}</span>
-          ${v.path && v.path !== n.path ? `<span class="cb-version-path">${icon('folder')}${esc(dirname(v.path) || 'Top level')}</span>` : ''}
-        </button></li>`).join('')}</ol>
-      ${versions.length >= 100 ? '<p class="cb-text">Showing the latest 100 versions. Older ones are on GitHub.</p>' : ''}
+      <div class="cb-days">${groups.map(g => `
+        <details class="cb-day" data-day="${esc(g.key)}" ${this.openDays.has(g.key) ? 'open' : ''}>
+          <summary><span class="cb-chev">${icon('chevron')}</span><span class="cb-day-label">${esc(g.label)}</span><span class="cb-count">${g.items.length} change${g.items.length === 1 ? '' : 's'}</span></summary>
+          <ol class="cb-versions">${g.items.map(row).join('')}</ol>
+        </details>`).join('')}</div>
+      ${versions.length >= 300 ? '<p class="cb-text">Showing the latest 300 versions. Older ones are on GitHub.</p>' : ''}
       <a class="cb-linkbtn" href="https://github.com/${esc(this.settings.owner)}/${esc(this.settings.repo)}/commits/${esc(this.store.gh.branch)}/${esc(n.path)}" target="_blank" rel="noopener">See the full history on GitHub</a>`;
+    body.addEventListener('toggle', e => {
+      const day = e.target.closest?.('[data-day]');
+      if (!day) return;
+      if (day.open) this.openDays.add(day.dataset.day); else this.openDays.delete(day.dataset.day);
+    }, true);
     body.onclick = e => {
       const b = e.target.closest('.cb-version');
       if (!b) return;

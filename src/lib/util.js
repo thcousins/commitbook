@@ -113,3 +113,28 @@ export function plainText(md) {
     .replace(/\s+/g, ' ')
     .trim();
 }
+
+/**
+ * Group versions (newest first) by the local day they were saved.
+ * Returns [{ key: '2026-10-27', label: 'Today' | 'Yesterday' | 'Mon 26 Oct 2026', today, items: [{ v, i }] }].
+ */
+export function groupByDay(versions, now = new Date()) {
+  const dayKey = d => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+  const todayKey = dayKey(now);
+  const y = new Date(now); y.setDate(y.getDate() - 1);
+  const yesterdayKey = dayKey(y);
+  const groups = [];
+  versions.forEach((v, i) => {
+    const d = new Date(v.date);
+    const key = isNaN(d) ? 'unknown' : dayKey(d);
+    let g = groups[groups.length - 1];
+    if (!g || g.key !== key) {
+      const label = key === todayKey ? 'Today' : key === yesterdayKey ? 'Yesterday' : isNaN(d) ? 'Unknown date'
+        : d.toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' }).replace(',', '');
+      g = { key, label, today: key === todayKey, items: [] };
+      groups.push(g);
+    }
+    g.items.push({ v, i });
+  });
+  return groups;
+}

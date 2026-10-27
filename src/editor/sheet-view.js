@@ -98,6 +98,8 @@ export class SheetView {
       const act = e.target.closest('[data-act]')?.dataset.act;
       if (act) this.action(act);
     });
+    this.bindActive();
+    this.bindPointing();
     this.hf = HyperFormula.buildFromArray([[]], HF_CONFIG);
     this.build();
     this.showFx(null);
@@ -220,6 +222,7 @@ export class SheetView {
     this.renderTotals();
     this.updateCount();
     if (document.activeElement !== this.fxInput) this.showFx();
+    else this.markCurrent(true);
   }
 
   /** Data for the formula engine: typed numbers like "£1,234.50" become numbers. */
@@ -337,6 +340,144 @@ export class SheetView {
     input.addEventListener('blur', () => finish(true));
   }
 
+  // ------------------------------------------------------------ active / selected
+
+  /**
+   * The header bar and formula bar show only while you're working in the spreadsheet
+   * (or it's selected); otherwise just the table shows. Clicking the header bar's empty
+   * space selects the whole spreadsheet, so Delete removes it.
+   */
+  bindActive() {
+    const bar = this.dom.querySelector('.cb-sheet-bar');
+    bar.addEventListener('mousedown', e => {
+      if (e.target.closest('button, input, label, a')) return;
+      e.preventDefault();
+      this.onSelectSheet?.();
+    });
+    this.dom.addEventListener('mousedown', e => {
+      this.setActive(true);
+      // Working inside the spreadsheet: the note's text editor lets go, so keys like
+      // Delete act on the cells, not on the note (or on the whole spreadsheet).
+      if (!bar.contains(e.target) || e.target.closest('button, input, label, a')) this.onEnterSheet?.();
+    });
+    this.dom.addEventListener('focusin', () => this.setActive(true));
+    this.away = e => {
+      const t = e.target;
+      if (this.dom.contains(t) || t.closest?.('.cb-fn-pop, .jcontextmenu, .jcontextmenu-focus, .cb-modal')) return;
+      this.setActive(false);
+    };
+    document.addEventListener('mousedown', this.away, true);
+  }
+
+  setActive(on) {
+    on = on || !!this.filterText;
+    if (this.dom.classList.contains('is-active') === on) return;
+    this.keepGridInPlace(() => this.dom.classList.toggle('is-active', on));
+  }
+
+  setSelected(on) {
+    this.keepGridInPlace(() => this.dom.classList.toggle('is-selected', on));
+  }
+
+  /** Showing or hiding the bars mustn't make the table jump under the pointer. */
+  keepGridInPlace(change) {
+    const before = this.host.getBoundingClientRect().top;
+    change();
+    const delta = this.host.getBoundingClientRect().top - before;
+    if (!delta) return;
+    const scroller = this.dom.closest('.cb-scroll, .cb-drawer-body');
+    if (!scroller) return;
+    const want = scroller.scrollTop + delta;
+    // A short note may not be tall enough to scroll; make room so the table can stay put.
+    const page = scroller.firstElementChild;
+    if (page && want > scroller.scrollHeight - scroller.clientHeight) page.style.minHeight = `${scroller.clientHeight + want + 1}px`;
+    scroller.scrollTop = want;
+  }
+
+  // ------------------------------------------------------------ clicking cells into a formula
+
+  /** The box being typed in, if it's a formula waiting for a cell or range. */
+  pointTarget() {
+    const el = document.activeElement;
+    if (!el || !(el === this.fxInput || (this.host.contains(el) && el.matches('input, textarea')))) return null;
+    const v = el.value;
+    if (!v.trim().startsWith('=')) return null;
+    const caret = el.selectionStart ?? v.length;
+    const p = this.pick;
+    if (p && p.el === el && caret === p.end && v.slice(p.start, p.end) === p.text) return { el, start: p.start, end: p.end };
+    if (/(^\s*=|[=(,;+\-*/^&<>:])\s*$/.test(v.slice(0, caret))) return { el, start: caret, end: caret };
+    return null;
+  }
+
+  bindPointing() {
+    const cellOf = t => {
+      const td = t.closest?.('td[data-x]');
+      if (!td || !this.host.contains(td)) return null;
+      const head = !!td.closest('thead');
+      if (!head && !td.closest('tbody')) return null;
+      return { x: Number(td.dataset.x), y: head ? null : Number(td.dataset.y) };
+    };
+    const refFor = (a, b) => {
+      const x1 = Math.min(a.x, b.x), x2 = Math.max(a.x, b.x);
+      if (a.y == null || b.y == null) return `${colName(x1)}:${colName(x2)}`;          // whole columns
+      const y1 = Math.min(a.y, b.y), y2 = Math.max(a.y, b.y);
+      const one = `${colName(x1)}${y1 + 1}`, two = `${colName(x2)}${y2 + 1}`;
+      return one === two ? one : `${one}:${two}`;
+    };
+    const mark = (a, b) => {
+      this.host.querySelectorAll('.cb-ref-pick').forEach(td => td.classList.remove('cb-ref-pick'));
+      if (!a) return;
+      const x1 = Math.min(a.x, b.x), x2 = Math.max(a.x, b.x);
+      const rows = a.y == null || b.y == null ? [0, this.sheet.rows.length - 1] : [Math.min(a.y, b.y), Math.max(a.y, b.y)];
+      for (let y = rows[0]; y <= rows[1]; y++) for (let x = x1; x <= x2; x++) this.ws.records?.[y]?.[x]?.element?.classList.add('cb-ref-pick');
+    };
+    const put = (target, text) => {
+      const { el, start, end } = target;
+      el.value = el.value.slice(0, start) + text + el.value.slice(end);
+      const caret = start + text.length;
+      el.setSelectionRange(caret, caret);
+      this.pick = { el, start, end: caret, text };
+      el.dispatchEvent(new Event('input', { bubbles: true }));
+      formulaHelper().hide();
+    };
+    this.host.addEventListener('mousedown', e => {
+      if (e.button !== 0) return;
+      const target = this.pointTarget();
+      const from = target && cellOf(e.target);
+      if (!from) return;
+      // Keep typing in the formula; the grid doesn't select this cell.
+      e.preventDefault();
+      e.stopPropagation();
+      let to = from;
+      put(target, refFor(from, to));
+      mark(from, to);
+      const move = ev => {
+        const c = cellOf(document.elementFromPoint(ev.clientX, ev.clientY) || ev.target);
+        if (!c || (c.x === to.x && c.y === to.y)) return;
+        if ((from.y == null) !== (c.y == null)) return;
+        to = c;
+        put({ el: target.el, start: this.pick.start, end: this.pick.end }, refFor(from, to));
+        mark(from, to);
+      };
+      const up = () => { document.removeEventListener('mousemove', move, true); document.removeEventListener('mouseup', up, true); };
+      document.addEventListener('mousemove', move, true);
+      document.addEventListener('mouseup', up, true);
+    }, true);
+    // Typing anything else ends the pick; leaving the box clears the highlight.
+    this.dom.addEventListener('keydown', e => { if (e.key.length === 1 || e.key === 'Backspace') { this.pick = null; mark(null); } }, true);
+    this.dom.addEventListener('focusout', () => setTimeout(() => { if (!this.pointTarget()) mark(null); }, 0));
+  }
+
+  /** Outline the cell being edited in the formula bar (the grid drops its own selection). */
+  markCurrent(on) {
+    this.host.querySelectorAll('.cb-cell-current').forEach(td => td.classList.remove('cb-cell-current'));
+    if (!on || !this.sel) return;
+    const td = this.sel.kind === 'total'
+      ? this.host.querySelector(`tfoot td[data-tx="${this.sel.x}"][data-ty="${this.sel.y}"]`)
+      : this.ws.records?.[this.sel.y]?.[this.sel.x]?.element;
+    td?.classList.add('cb-cell-current');
+  }
+
   // ------------------------------------------------------------ formula bar
 
   rawAt(sel) {
@@ -359,6 +500,7 @@ export class SheetView {
       }
       original = fx.value;
       cancelled = false;
+      this.markCurrent(true);
     });
     fx.addEventListener('keydown', e => {
       e.stopPropagation();
@@ -370,6 +512,8 @@ export class SheetView {
       if (!cancelled) this.commitFx();
       cancelled = false;
       this.fxSig.hidden = true;
+      this.markCurrent(false);
+      this.pick = null;
     });
     fx.addEventListener('click', () => this.showSignature(fx));
     fx.addEventListener('keyup', () => this.showSignature(fx));
@@ -458,6 +602,7 @@ export class SheetView {
   filter(text) {
     this.filterText = text.trim();
     if (this.filterText) this.ws.search(this.filterText); else this.ws.resetSearch();
+    this.setActive(true);
     this.updateCount();
   }
 
@@ -552,6 +697,7 @@ export class SheetView {
   }
 
   destroy() {
+    document.removeEventListener('mousedown', this.away, true);
     try { jspreadsheet.destroy(this.host, true); } catch { /* ignore */ }
     try { this.hf.destroy(); } catch { /* ignore */ }
   }
