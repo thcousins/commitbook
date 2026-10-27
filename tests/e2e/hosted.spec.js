@@ -21,6 +21,9 @@ async function signIn(page) {
   await expect(page.locator('.cb-folder-row', { hasText: 'House' })).toBeVisible();
 }
 
+// Put the cursor at the end of the note (Ctrl/Cmd+End differs between browsers).
+const toEnd = page => page.evaluate(() => window.commitbook.editor.commands.focus('end'));
+
 const files = async () => (await fetch(`${FAKE}/__files`)).json();
 const shot = (page, name) => page.screenshot({ path: `${SHOTS}/hosted-${name}.png` });
 
@@ -53,7 +56,7 @@ test('edit a note through the server', async ({ page }) => {
   await signIn(page);
   await page.locator('.cb-item', { hasText: 'Gift ideas' }).click();
   await page.locator('#cb-editor .tiptap').click();
-  await page.keyboard.press('ControlOrMeta+End');
+  await toEnd(page);
   await page.keyboard.type(' Saved via the server.');
   await expect(page.locator('.cb-status')).toHaveClass(/is-saved/, { timeout: 15_000 });
   expect((await files())['gift-ideas.md']).toContain('Saved via the server.');

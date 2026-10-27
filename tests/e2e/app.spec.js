@@ -49,6 +49,9 @@ test.afterEach(async ({ page }, info) => {
   fs.writeFileSync(`test-output/failures/${name}.txt`, `${(page.__problems || []).join('\n')}\n\n---- #cb-page ----\n${html.slice(0, 20000)}`);
 });
 
+// Put the cursor at the end of the note (Ctrl/Cmd+End differs between browsers).
+const toEnd = page => page.evaluate(() => window.commitbook.editor.commands.focus('end'));
+
 const shot = (page, name, info) => page.screenshot({ path: `${SHOTS}/${info.project.name}-${name}.png` });
 const openNote = (page, title) => page.locator('.cb-item', { hasText: title }).first().click();
 const waitSaved = page => expect(page.locator('.cb-status')).toHaveClass(/is-saved/, { timeout: 15_000 });
@@ -74,7 +77,7 @@ test('typing saves automatically and keeps the file format', async ({ page }) =>
   await openNote(page, 'Gift ideas');
   const ed = page.locator('#cb-editor .tiptap');
   await ed.click();
-  await page.keyboard.press('ControlOrMeta+End');
+  await toEnd(page);
   await page.keyboard.press('Enter');
   await page.keyboard.type('## Dad');
   await page.keyboard.press('Enter');
@@ -137,7 +140,7 @@ test('insert a spreadsheet from the toolbar', async ({ page }) => {
   const { gh, problems } = await setup(page);
   await openNote(page, 'Gift ideas');
   await page.locator('#cb-editor .tiptap').click();
-  await page.keyboard.press('ControlOrMeta+End');
+  await toEnd(page);
   await page.locator('.cb-tool[data-cmd="sheet"]').click();
   const sheet = page.locator('.cb-sheet');
   await expect(sheet).toHaveCount(1);
@@ -236,7 +239,7 @@ test('manual saving: Save button, and a warning when leaving', async ({ page }, 
   await expect(page.locator('#cb-autosave')).not.toBeChecked();
   await openNote(page, 'Gift ideas');
   await page.locator('#cb-editor .tiptap').click();
-  await page.keyboard.press('ControlOrMeta+End');
+  await toEnd(page);
   await page.keyboard.type(' Extra words');
   await page.waitForTimeout(3500);
   expect(gh.files()['gift-ideas.md']).not.toContain('Extra words');
@@ -250,7 +253,7 @@ test('manual saving: Save button, and a warning when leaving', async ({ page }, 
   await waitSaved(page);
   expect(gh.files()['gift-ideas.md']).toContain('Extra words');
   await page.locator('#cb-editor .tiptap').click();
-  await page.keyboard.press('ControlOrMeta+End');
+  await toEnd(page);
   await page.keyboard.type(' and more');
   await page.locator('.cb-item', { hasText: 'Welcome' }).click();
   await page.locator('.cb-modal [data-id="discard"]').click();
@@ -267,7 +270,7 @@ test('changes made elsewhere: refresh and conflict', async ({ page }) => {
   await expect(page.locator('#cb-editor')).toContainText('(from Claude)');
   // Now a real conflict: edit locally while it changes remotely.
   await page.locator('#cb-editor .tiptap').click();
-  await page.keyboard.press('ControlOrMeta+End');
+  await toEnd(page);
   gh.externalEdit({ 'gift-ideas.md': gh.files()['gift-ideas.md'] + '\nRemote line\n' });
   await page.keyboard.type(' local words');
   await expect(page.locator('.cb-modal')).toContainText('changed somewhere else', { timeout: 15_000 });
@@ -382,7 +385,7 @@ test('function list and date results', async ({ page }, info) => {
   const { gh, problems } = await setup(page);
   await openNote(page, 'Gift ideas');
   await page.locator('#cb-editor .tiptap').click();
-  await page.keyboard.press('ControlOrMeta+End');
+  await toEnd(page);
   await page.locator('.cb-tool[data-cmd="sheet"]').click();
   const sheet = page.locator('.cb-sheet');
   await sheet.locator('tbody tr').nth(0).locator('td').nth(1).click();
