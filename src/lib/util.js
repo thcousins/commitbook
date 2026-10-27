@@ -94,6 +94,11 @@ export async function pool(items, limit, fn) {
   return out;
 }
 
+/** Text for list previews: like plainText, but without spreadsheet contents. */
+export function previewText(md) {
+  return plainText(String(md || '').split('\n').filter(l => !/^\s*\|/.test(l)).join('\n'));
+}
+
 /** Plain text of a note body, for search and list previews. */
 export function plainText(md) {
   return String(md || '')

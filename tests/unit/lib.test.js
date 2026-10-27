@@ -95,3 +95,8 @@ test('names, paths and text helpers', () => {
   assert.equal(plainText('## Head\n- [x] Done thing\n| A | B |\n| --- | --- |\n**bold** [link](http://x)'), 'Head Done thing A B bold link');
   assert.equal(fromBase64(toBase64('£ and ✓ and 🙂')), '£ and ✓ and 🙂');
 });
+
+test('previews leave out spreadsheet contents', async () => {
+  const { previewText } = await import('../../src/lib/util.js');
+  assert.equal(previewText('Intro\n\n<!-- commitbook:sheet -->\n| A | B |\n| --- | --- |\n| 1 | 2 |\n\nAfter'), 'Intro After');
+});

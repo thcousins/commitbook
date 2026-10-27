@@ -43,7 +43,7 @@ jobs:
         continue-on-error: true
         run: |
           npx playwright install --with-deps chromium webkit > /dev/null
-          PW_PROJECTS="${{ vars.PW_PROJECTS || 'chromium' }}" npx playwright test 2>&1 | tee test-output/e2e.log
+          PW_PROJECTS="${{ vars.PW_PROJECTS || 'chromium,webkit' }}" npx playwright test 2>&1 | tee test-output/e2e.log
           exit ${PIPESTATUS[0]}
       - name: Publish results to the ci-results branch
         if: always() && github.event_name != 'pull_request'

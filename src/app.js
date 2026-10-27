@@ -291,7 +291,7 @@ class App {
   itemHtml(n, { showFolder = false, depth = 0 } = {}) {
     const cur = this.current && this.current.path === n.path && this.view === 'note';
     const hasSheet = n.body.includes('commitbook:sheet');
-    const snip = n.plain.slice(0, 120);
+    const snip = (n.preview ?? n.plain).slice(0, 120);
     return `<button type="button" class="cb-item${cur ? ' is-current' : ''}" data-path="${esc(n.path)}" draggable="true" style="--depth:${depth}" ${cur ? 'aria-current="true"' : ''}>
       <div class="cb-item-title"><span>${esc(n.title)}</span>${hasSheet ? icon('sheet', 'cb-mini') : ''}</div>
       ${snip ? `<div class="cb-item-snip">${esc(snip)}</div>` : ''}

@@ -10,7 +10,7 @@
 import { GitHubRepo, ConflictError, GitHubError, gitBlobSha } from './github.js';
 import { splitFrontMatter, joinFrontMatter } from './lib/frontmatter.js';
 import { createCache, local } from './lib/cache.js';
-import { slugify, dirname, basename, joinPath, uniquePath, nowIso, pool, plainText } from './lib/util.js';
+import { slugify, dirname, basename, joinPath, uniquePath, nowIso, pool, plainText, previewText } from './lib/util.js';
 import { DATA_README, DATA_CLAUDE } from './templates.js';
 
 export const TAGS_PATH = '.commitbook/tags.json';
@@ -34,6 +34,7 @@ function noteFrom(path, text, sha) {
     created: data.created || null,
     updated: data.updated || data.created || null,
     plain: plainText(body),
+    preview: previewText(body),
   };
 }
 

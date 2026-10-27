@@ -76,6 +76,7 @@ export class SheetView {
     });
     this.hf = HyperFormula.buildFromArray([[]], HF_CONFIG);
     this.build();
+    this.showFx(null);
   }
 
   // ------------------------------------------------------------ grid
