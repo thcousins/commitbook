@@ -1,0 +1,11 @@
+# Commitbook server files. Only the endpoint scripts may be opened directly.
+Options -Indexes
+<FilesMatch "^(lib\.php|.*\.json|.*\.tmp.*)$">
+  <IfModule mod_authz_core.c>
+    Require all denied
+  </IfModule>
+  <IfModule !mod_authz_core.c>
+    Order allow,deny
+    Deny from all
+  </IfModule>
+</FilesMatch>

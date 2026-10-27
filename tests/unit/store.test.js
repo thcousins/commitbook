@@ -169,3 +169,40 @@ test('several saves in a row keep working after someone else commits a different
   assert.equal(moved.path, 'Folder/a.md');
   assert.ok(gh.files()['b.md'].includes('changed elsewhere'));
 });
+
+test('history follows a note through moves, the Trash and back', async () => {
+  const { store } = setup({ 'a.md': NOTE('A', 'version one') });
+  await store.connect(); await store.load();
+  let n = await store.saveNote(store.notes.get('a.md'), { title: 'A', body: 'version two', tags: [] });
+  n = await store.moveNote(n, 'House');
+  n = await store.saveNote(n, { title: 'A', body: 'version three', tags: [] });
+  n = await store.moveNote(n, 'House/Kitchen');
+  await store.trashNote(n);
+  n = await store.restoreNote([...store.trash.values()][0]);
+  n = await store.saveNote(n, { title: 'A', body: 'version four', tags: [] });
+  assert.equal(n.path, 'House/Kitchen/a.md');
+  const versions = await store.history(n.path);
+  const paths = versions.map(v => v.path);
+  assert.deepEqual([...new Set(paths)], ['House/Kitchen/a.md', 'House/a.md', 'a.md']);
+  const bodies = [];
+  for (const v of versions) {
+    const got = await store.versionAt(v.path, v.sha);
+    if (!got) { assert.match(v.message, /^Delete/); continue; }   // the step where it went to the Trash
+    bodies.push(got.body.trim());
+  }
+  for (const want of ['version one', 'version two', 'version three', 'version four']) assert.ok(bodies.includes(want), want);
+  assert.equal(bodies[bodies.length - 1], 'version one');
+  assert.equal(new Set(versions.map(v => v.sha)).size, versions.length, 'no duplicates');
+});
+
+test('history is not confused by a different note later using the old path', async () => {
+  const { store } = setup({ 'a.md': NOTE('A', 'first note') });
+  await store.connect(); await store.load();
+  const moved = await store.moveNote(store.notes.get('a.md'), 'Old');
+  await store.saveNote({ path: null, data: {} }, { title: 'A', body: 'a different note', tags: [] }); // takes a.md again
+  const versions = await store.history(moved.path);
+  const bodies = [];
+  for (const v of versions) bodies.push((await store.versionAt(v.path, v.sha))?.body.trim());
+  assert.ok(!bodies.includes('a different note'));
+  assert.ok(bodies.includes('first note'));
+});

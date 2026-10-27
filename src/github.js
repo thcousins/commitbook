@@ -12,6 +12,8 @@ export class GitHubError extends Error {
   }
 }
 export class ConflictError extends GitHubError {}
+/** The server's sign-in has expired (hosted mode only). */
+export class SignedOutError extends GitHubError {}
 
 /** Git's own blob id, so we can know a file's sha without asking GitHub. */
 export async function gitBlobSha(text) {
@@ -27,10 +29,15 @@ export async function gitBlobSha(text) {
 const encPath = p => p.split('/').map(encodeURIComponent).join('/');
 
 export class GitHubRepo {
-  constructor({ owner, repo, token, fetchImpl, apiBase = 'https://api.github.com' }) {
+  /**
+   * Either `token` (the browser talks to GitHub directly) or `proxy` (the URL of the
+   * Commitbook server's github.php, which adds the access key on the server).
+   */
+  constructor({ owner, repo, token, proxy = null, fetchImpl, apiBase = 'https://api.github.com' }) {
     this.owner = owner;
     this.repo = repo;
     this.token = token;
+    this.proxy = proxy;
     this.fetch = fetchImpl || ((...a) => fetch(...a));
     this.api = apiBase;
     this.branch = null;
@@ -40,17 +47,32 @@ export class GitHubRepo {
   get base() { return `${this.api}/repos/${encodeURIComponent(this.owner)}/${encodeURIComponent(this.repo)}`; }
 
   async request(method, url, body, { allow = [] } = {}) {
-    const res = await this.fetch(url.startsWith('http') ? url : this.base + url, {
-      method,
-      headers: {
+    let target, headers;
+    if (this.proxy) {
+      const path = `/repos/${this.owner}/${this.repo}${url}`;
+      target = `${this.proxy}?p=${encodeURIComponent(path)}`;
+      headers = { Accept: 'application/json', 'X-Commitbook': '1', ...(body ? { 'Content-Type': 'application/json' } : {}) };
+    } else {
+      target = url.startsWith('http') ? url : this.base + url;
+      headers = {
         Accept: 'application/vnd.github+json',
         Authorization: `Bearer ${this.token}`,
         'X-GitHub-Api-Version': '2022-11-28',
         ...(body ? { 'Content-Type': 'application/json' } : {}),
-      },
+      };
+    }
+    const res = await this.fetch(target, {
+      method,
+      headers,
       body: body ? JSON.stringify(body) : undefined,
       cache: 'no-store',
+      credentials: 'same-origin',
     });
+    if (this.proxy && res.status === 401) {
+      let msg = '';
+      try { msg = (await res.clone().json()).message || ''; } catch { /* ignore */ }
+      if (/sign in/i.test(msg)) throw new SignedOutError('You’ve been signed out. Please sign in again.', 401);
+    }
     const remaining = res.headers?.get?.('x-ratelimit-remaining');
     if (remaining != null) this.rate = { remaining: Number(remaining), reset: Number(res.headers.get('x-ratelimit-reset')) * 1000 };
     if (allow.includes(res.status)) return { __status: res.status };

@@ -66,6 +66,27 @@ export function createFakeGitHub({ owner = 'me', repo = 'notes', files = {}, emp
     return out;
   }
 
+  // Like GitHub, report a removed file plus a similar added file as one rename.
+  function withRenames(files) {
+    const similar = (x, y) => {
+      const a = new Set(String(x).split('\n')), b = new Set(String(y).split('\n'));
+      let common = 0;
+      for (const l of a) if (b.has(l)) common++;
+      return common / Math.max(a.size, b.size) >= 0.5;
+    };
+    const removed = files.filter(f => f.status === 'removed');
+    const out = [];
+    for (const f of files) {
+      if (f.status === 'removed') continue;
+      if (f.status === 'added') {
+        const i = removed.findIndex(r => similar(r.old, f.new));
+        if (i >= 0) { const r = removed.splice(i, 1)[0]; out.push({ ...f, status: 'renamed', previous: r.path, old: r.old }); continue; }
+      }
+      out.push(f);
+    }
+    return [...out, ...removed];
+  }
+
   function handle(method, rawUrl, body) {
     const url = new URL(rawUrl);
     const path = decodeURIComponent(url.pathname);
@@ -150,7 +171,7 @@ export function createFakeGitHub({ owner = 'me', repo = 'notes', files = {}, emp
     if ((m = rest.match(/^\/commits\/([0-9a-f]+)$/)) && method === 'GET') {
       const c = commits.get(m[1]);
       if (!c) return err(404, 'Not Found');
-      return ok({ ...commitJson(c), files: changedPaths(c).map(f => ({ filename: f.path, status: f.status, patch: naivePatch(f.old, f.new) })) });
+      return ok({ ...commitJson(c), files: withRenames(changedPaths(c)).map(f => ({ filename: f.path, status: f.status, ...(f.previous ? { previous_filename: f.previous } : {}), patch: naivePatch(f.old, f.new) })) });
     }
     return err(404, `Fake GitHub has no route for ${method} ${rest}`);
   }

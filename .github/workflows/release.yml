@@ -1,0 +1,47 @@
+name: Release
+
+# Builds the app and attaches a ready-to-upload zip to a GitHub release.
+# Runs when a version tag such as v0.2.0 is pushed, or by hand.
+
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: if [ -f package-lock.json ]; then npm ci; else npm install --no-audit --no-fund; fi
+      - run: npm run test:unit
+      - run: npm run build
+      - name: Make the zip
+        id: zip
+        run: |
+          version=$(node -p "require('./package.json').version")
+          tag="${GITHUB_REF_NAME}"
+          case "$tag" in v*) ;; *) tag="v$version" ;; esac
+          cp docs/install.md dist/INSTALL.md
+          find dist -name '*.map' -delete
+          (cd dist && zip -qr "../commitbook-$version.zip" . -x '.DS_Store')
+          echo "file=commitbook-$version.zip" >> "$GITHUB_OUTPUT"
+          echo "tag=$tag" >> "$GITHUB_OUTPUT"
+          unzip -l "commitbook-$version.zip" | tail -3
+      - name: Publish the release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          tag="${{ steps.zip.outputs.tag }}"
+          notes="Download **${{ steps.zip.outputs.file }}** below and follow [the install guide](https://github.com/${{ github.repository }}/blob/main/docs/install.md)."
+          if gh release view "$tag" > /dev/null 2>&1; then
+            gh release upload "$tag" "${{ steps.zip.outputs.file }}" --clobber
+          else
+            gh release create "$tag" "${{ steps.zip.outputs.file }}" --title "Commitbook $tag" --notes "$notes"
+          fi

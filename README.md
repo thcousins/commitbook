@@ -11,14 +11,26 @@ your notes stay readable on GitHub, by any text editor and by AI assistants such
   filtering, number formats and pinned total rows. Stored as an ordinary Markdown table.
 - **Folders and tags:** nest notes in folders and drag them between folders. Tags have unique
   names and colours, and you can filter by several at once.
-- **History:** see every version of a note, restore any of them, and search old versions.
+- **History:** see every version of a note (even from before it was moved), restore any of them, and search old versions.
 - **Trash:** deleted notes can be restored.
 - **Auto-save or manual saving**, with a warning if you leave a note without saving.
 - **Changes made elsewhere** (another device, or Claude editing the repository) are picked up,
   and the app never silently overwrites them.
 - **No server:** the app is a static web page. It talks straight to GitHub from your browser.
 
-## Using it
+## Two ways to run it
+
+| | **On your own web hosting** (recommended) | **Browser only** (e.g. GitHub Pages) |
+|---|---|---|
+| Where the GitHub access key lives | On your server, never sent to the browser | In each browser you use |
+| Signing in | Username and password; works with Apple Passwords and other password managers | Paste the repository and access key once per device |
+| Needs | PHP hosting with HTTPS (any cPanel host) | Any static hosting |
+| How to install | Upload the release zip — see [docs/install.md](docs/install.md) | Fork this repo and turn on GitHub Pages |
+
+It's the same build either way: the app checks whether its PHP server side is there and
+switches mode by itself.
+
+## Using it in a browser only
 
 You need a GitHub account.
 
@@ -59,7 +71,10 @@ Budget for the spring refit.
 
 ## Hosting your own copy
 
-The app is static files, so you can host it anywhere.
+For web hosting with PHP, follow [docs/install.md](docs/install.md): upload the zip from the
+[Releases page](https://github.com/thcousins/commitbook/releases) and open the address.
+
+For browser-only use, the app is static files, so you can host it anywhere.
 
 - **GitHub Pages:** fork this repository, then in *Settings → Pages* set *Source* to
   *GitHub Actions*. The `Deploy` workflow publishes it on every push.
@@ -72,7 +87,7 @@ The app is static files, so you can host it anywhere.
 ```sh
 npm install
 npm run dev          # http://localhost:5173
-npm run test:unit    # file format, formulas and the GitHub storage layer
+npm run test:unit    # file format, formulas, the storage layer and the PHP server side (needs php)
 npm run build
 npx playwright install chromium webkit
 npm run test:e2e     # the built app in Chrome and Safari's engine, against a fake GitHub
@@ -90,6 +105,7 @@ Code map:
 | `src/app.js` | The app: sidebar, note view, panels, saving |
 | `src/editor/` | TipTap editor and the spreadsheet block |
 | `src/lib/` | Front matter, spreadsheet Markdown, formulas, formats, helpers |
+| `public/api/` | PHP server side for hosted mode: sign-in, setup, settings, GitHub gatekeeper |
 
 ## Licence
 

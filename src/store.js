@@ -7,7 +7,7 @@
 //   .trash/<original path>     notes in the Trash
 //   README.md, CLAUDE.md       about the repo (not notes)
 
-import { GitHubRepo, ConflictError, GitHubError, gitBlobSha } from './github.js';
+import { GitHubRepo, ConflictError, GitHubError, SignedOutError, gitBlobSha } from './github.js';
 import { splitFrontMatter, joinFrontMatter } from './lib/frontmatter.js';
 import { createCache, local } from './lib/cache.js';
 import { slugify, dirname, basename, joinPath, uniquePath, nowIso, pool, plainText, previewText } from './lib/util.js';
@@ -39,8 +39,8 @@ function noteFrom(path, text, sha) {
 }
 
 export class Store {
-  constructor({ owner, repo, token, fetchImpl, cacheName }) {
-    this.gh = new GitHubRepo({ owner, repo, token, fetchImpl });
+  constructor({ owner, repo, token, proxy, fetchImpl, cacheName }) {
+    this.gh = new GitHubRepo({ owner, repo, token, proxy, fetchImpl });
     this.key = `${owner}/${repo}`;
     this.cache = createCache(cacheName || this.key);
     this.notes = new Map();      // path -> note
@@ -451,9 +451,46 @@ export class Store {
 
   // ---------------------------------------------------------------- history
 
-  async history(path) {
-    const commits = await this.gh.listCommits({ path, perPage: 100 });
-    return commits;
+  /**
+   * Every version of a note, newest first, following it back through moves and
+   * renames (GitHub lists changes by exact path, so each earlier path is asked for
+   * in turn). Each entry says which path the note had at that version.
+   */
+  async history(path, { limit = 300 } = {}) {
+    const out = [];
+    const seen = new Set();
+    let current = path;
+    let before = null;          // only include commits older than the move we came through
+    for (let hop = 0; hop < 20 && current && out.length < limit; hop++) {
+      const commits = [];
+      for (let page = 1; page <= 5; page++) {
+        const batch = await this.gh.listCommits({ path: current, perPage: 100, page });
+        commits.push(...batch);
+        if (batch.length < 100) break;
+      }
+      let list = commits;
+      if (before) {
+        const i = list.findIndex(c => c.sha === before);
+        list = i >= 0 ? list.slice(i + 1) : list;
+      }
+      for (const c of list) {
+        if (seen.has(c.sha)) continue;
+        seen.add(c.sha);
+        out.push({ ...c, path: current });
+      }
+      const oldest = list[list.length - 1];
+      if (!oldest) break;
+      // Was the note's file created here by moving it from somewhere else?
+      let d = await this.cache.get('commit:' + oldest.sha);
+      if (d === undefined) { d = await this.gh.getCommit(oldest.sha); this.cache.set('commit:' + oldest.sha, d); }
+      const f = d.files.find(x => x.path === current);
+      if (!f || f.status !== 'renamed' || !f.previous) break;
+      // The rename commit itself is the first version at the new path; carry on
+      // with the older path from just before it.
+      before = oldest.sha;
+      current = f.previous;
+    }
+    return out.slice(0, limit);
   }
 
   async versionAt(path, sha) {
@@ -545,4 +582,4 @@ function normaliseTags(list) {
   return out;
 }
 
-export { ConflictError, GitHubError };
+export { ConflictError, GitHubError, SignedOutError };

@@ -25,6 +25,12 @@ files in a user's GitHub repository through the REST API. There is no backend.
   The grid is Jspreadsheet CE with `parseFormulas: false`; HyperFormula computes values and
   `SheetView.paint()` draws them. Total rows are drawn by `renderTotals()`, not Jspreadsheet.
 - `src/lib/`: pure helpers with unit tests in `tests/unit/`.
+- `public/api/`: the PHP server side for hosted mode (copied into the build as `api/`).
+  `github.php` must keep allowing only the configured repository and the API paths the app
+  uses. Settings live outside the web folder (`cb_data_dir()`); never write secrets inside it.
+  `src/main.js` detects hosted mode by asking `api/session.php`.
+- Releases: push a tag `vX.Y.Z` (matching `package.json` and `CB_VERSION` in `lib.php`) and the
+  `Release` workflow attaches `commitbook-X.Y.Z.zip`.
 
 ## Testing
 

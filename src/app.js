@@ -1,7 +1,7 @@
 // The Commitbook app shell: sidebar (folders, search, tags), the open note,
 // history and file panels, the Trash, and saving.
 
-import { Store, ConflictError, TRASH } from './store.js';
+import { Store, ConflictError, SignedOutError, TRASH } from './store.js';
 import { createEditor, getMarkdown, COMMANDS, activeStates } from './editor/editor.js';
 import { local } from './lib/cache.js';
 import { esc, friendlyDate, longDate, debounce, dirname, basename, plainText, nowIso } from './lib/util.js';
@@ -31,7 +31,8 @@ class App {
   constructor(root, settings) {
     this.root = root;
     this.settings = settings;
-    this.store = new Store({ owner: settings.owner, repo: settings.repo, token: settings.token });
+    this.hosted = !!settings.hosted;
+    this.store = new Store({ owner: settings.owner, repo: settings.repo, token: settings.token, proxy: this.hosted ? 'api/github.php' : null });
     this.repoKey = `${settings.owner}/${settings.repo}`;
     this.current = null;          // the open note ({ path: null } for a new one)
     this.editor = null;
@@ -61,6 +62,7 @@ class App {
       const { initialised } = await this.store.load();
       if (initialised) toast('Your notes repository is set up. Create your first note with “New”.');
     } catch (e) {
+      if (e instanceof SignedOutError) { this.signedOut(); return; }
       this.setStatus('error', e.message);
       this.showLoadError(e);
       return;
@@ -650,6 +652,7 @@ class App {
         this.renderSidebar();
       } catch (e) {
         this.dirty = true;
+        if (e instanceof SignedOutError) { this.signedOut(); return; }
         if (e instanceof ConflictError && note.path) {
           this.setStatus('conflict');
           await this.resolveConflict(note, p);
@@ -1042,6 +1045,7 @@ class App {
         <li><button type="button" class="cb-version" data-i="${i}">
           <span class="cb-version-date">${esc(longDate(v.date))}${i === 0 ? ' <span class="cb-badge">Current</span>' : ''}</span>
           <span class="cb-version-msg">${esc(v.message.split('\n')[0])}</span>
+          ${v.path && v.path !== n.path ? `<span class="cb-version-path">${icon('folder')}${esc(dirname(v.path) || 'Top level')}</span>` : ''}
         </button></li>`).join('')}</ol>
       ${versions.length >= 100 ? '<p class="cb-text">Showing the latest 100 versions. Older ones are on GitHub.</p>' : ''}
       <a class="cb-linkbtn" href="https://github.com/${esc(this.settings.owner)}/${esc(this.settings.repo)}/commits/${esc(this.store.gh.branch)}/${esc(n.path)}" target="_blank" rel="noopener">See the full history on GitHub</a>`;
@@ -1049,16 +1053,23 @@ class App {
       const b = e.target.closest('.cb-version');
       if (!b) return;
       const v = versions[Number(b.dataset.i)];
-      this.showVersion(n.path, v.sha, v.date, { isCurrent: b.dataset.i === '0', back: () => this.showHistory() });
+      this.showVersion(v.path || n.path, v.sha, v.date, { isCurrent: b.dataset.i === '0', back: () => this.showHistory(), currentPath: n.path });
     };
   }
 
-  async showVersion(path, ref, date, { isCurrent = false, back = null, highlight = '' } = {}) {
+  async showVersion(path, ref, date, { isCurrent = false, back = null, highlight = '', currentPath = null } = {}) {
     const d = this.openDrawer(`${this.drawerHead('Older version')}<div class="cb-drawer-body"><p class="cb-text">Loading…</p></div>`);
     let v;
     try { v = await this.store.versionAt(path, ref); } catch (e) { $('.cb-drawer-body', d).innerHTML = `<p class="cb-text">${esc(e.message)}</p>`; return; }
-    if (!v) { $('.cb-drawer-body', d).innerHTML = '<p class="cb-text">That version couldn’t be found.</p>'; return; }
-    const exists = this.store.notes.get(path);
+    if (!v) {
+      $('.cb-drawer-body', d).innerHTML = `
+        ${back ? `<button type="button" class="cb-linkbtn" data-act="back">${icon('back')}All versions</button>` : ''}
+        <p class="cb-text" style="margin-top:12px">At this point (${esc(longDate(date))}) the note was deleted or moved away, so there’s nothing to show for this step. The versions before and after it are in the list.</p>`;
+      $('[data-act="back"]', d)?.addEventListener('click', () => back());
+      return;
+    }
+    // When viewing an older version from before a move, "current" means the note where it is now.
+    const exists = this.store.notes.get(currentPath || path);
     const body = $('.cb-drawer-body', d);
     body.innerHTML = `
       <div class="cb-version-head">
@@ -1084,8 +1095,9 @@ class App {
         if (act === 'restore') {
           const ok = await confirmBox({ title: 'Restore this version?', text: 'It becomes the current version. The version it replaces stays in the history, so nothing is lost.', ok: 'Restore' });
           if (!ok) return;
-          if (this.current?.path === path) { this.dirty = false; this.saveSoon.cancel(); if (this.saving) await this.saving; }
-          const cur = this.store.notes.get(path);
+          const target = currentPath || path;
+          if (this.current?.path === target) { this.dirty = false; this.saveSoon.cancel(); if (this.saving) await this.saving; }
+          const cur = this.store.notes.get(target);
           const saved = await this.store.restoreVersion(cur, v, longDate(date));
           await this.openNote(saved);
           toast('Version restored.');
@@ -1185,7 +1197,8 @@ class App {
       <button type="button" class="cb-pop-item" data-act="refresh">${icon('refresh')}Check for changes</button>
       <div class="cb-pop-sep"></div>
       <a class="cb-pop-item" href="https://github.com/${esc(this.settings.owner)}/${esc(this.settings.repo)}" target="_blank" rel="noopener">${icon('link')}Open repository on GitHub</a>
-      <button type="button" class="cb-pop-item" data-act="signout">${icon('logout')}Sign out on this device</button>`, pop => {
+      ${this.hosted ? `<button type="button" class="cb-pop-item" data-act="server">${icon('settings')}Sign-in and GitHub settings</button>` : ''}
+      <button type="button" class="cb-pop-item" data-act="signout">${icon('logout')}Sign out${this.hosted && this.settings.user ? ` (${esc(this.settings.user)})` : ' on this device'}</button>`, pop => {
       pop.addEventListener('click', async e => {
         const act = e.target.closest('[data-act]')?.dataset.act;
         if (!act) return;
@@ -1195,16 +1208,88 @@ class App {
         if (act === 'trash') this.showTrash();
         if (act === 'refresh') { await this.checkForChanges(); toast('Up to date.'); }
         if (act === 'signout') this.signOut();
+        if (act === 'server') this.serverSettings();
       });
     });
   }
 
   async signOut() {
+    if (this.hosted) {
+      if (!(await this.flush().catch(() => true))) return;
+      try { await fetch('api/logout.php', { method: 'POST', headers: { 'X-Commitbook': '1' }, credentials: 'same-origin' }); } catch { /* ignore */ }
+      location.href = location.pathname + '?signedout=1';
+      return;
+    }
     const ok = await confirmBox({ title: 'Sign out on this device?', text: 'The access key is removed from this browser. Your notes stay safe on GitHub.', ok: 'Sign out' });
     if (!ok) return;
     if (!(await this.flush().catch(() => true))) return;
     local.del('cb:settings');
     location.reload();
+  }
+
+  /** The server's sign-in expired: keep any unsaved changes, then show the sign-in page. */
+  signedOut() {
+    if (this.dirty && this.current) {
+      const auto = this.autosave;
+      this.autosave = true;          // drafts are only kept with auto-save on
+      this.storeDraft();
+      this.autosave = auto;
+    }
+    this.dirty = false;
+    location.href = location.pathname + '?signedout=1';
+  }
+
+  async serverSettings() {
+    const wrap = document.createElement('div');
+    wrap.className = 'cb-modal';
+    wrap.innerHTML = `<div class="cb-modal-box" role="dialog" aria-modal="true" aria-labelledby="cb-ss-title">
+      <form class="cb-form" id="cb-ss">
+        <h3 id="cb-ss-title">Sign-in and GitHub settings</h3>
+        <p class="cb-text">Change only what you need. Leave a box empty to keep it as it is.</p>
+        <input type="text" name="username" autocomplete="username" value="${esc(this.settings.user || '')}" hidden>
+        <label class="cb-field"><span>New password <small>(at least 10 characters)</small></span><input name="newPassword" type="password" autocomplete="new-password" minlength="10"></label>
+        <label class="cb-field"><span>Notes repository</span><input name="repo" autocomplete="off" autocapitalize="none" spellcheck="false" value="${esc(this.settings.owner + '/' + this.settings.repo)}"></label>
+        <label class="cb-field"><span>New GitHub access key</span><input name="token" type="password" autocomplete="off" placeholder="Only if you’ve made a new one"></label>
+        <label class="cb-field"><span>Current password <small>(needed to save)</small></span><input name="currentPassword" type="password" autocomplete="current-password" required></label>
+        <p class="cb-help">Changing the password signs out your other devices.</p>
+        <p class="cb-error" hidden></p>
+        <div class="cb-row"><button type="button" class="cb-btn" data-cancel>Cancel</button><button class="cb-btn cb-btn-primary">Save</button></div>
+      </form></div>`;
+    document.body.appendChild(wrap);
+    const form = $('#cb-ss', wrap);
+    const close = () => wrap.remove();
+    form.querySelector('[data-cancel]').addEventListener('click', close);
+    wrap.addEventListener('keydown', e => { if (e.key === 'Escape') close(); });
+    form.newPassword.focus();
+    form.addEventListener('submit', async e => {
+      e.preventDefault();
+      const err = $('.cb-error', form);
+      const repo = form.repo.value.trim();
+      const body = {
+        currentPassword: form.currentPassword.value,
+        newPassword: form.newPassword.value || undefined,
+        token: form.token.value.trim() || undefined,
+        repo: repo && repo !== `${this.settings.owner}/${this.settings.repo}` ? repo : undefined,
+        remember: true,
+      };
+      const btn = form.querySelector('.cb-btn-primary');
+      btn.disabled = true;
+      try {
+        const r = await fetch('api/settings.php', { method: 'POST', headers: { 'X-Commitbook': '1', 'Content-Type': 'application/json' }, credentials: 'same-origin', body: JSON.stringify(body) });
+        const j = await r.json().catch(() => ({}));
+        if (!r.ok) throw new Error(j.message || 'The settings couldn’t be saved.');
+        close();
+        if (j.changed?.includes('github') && (j.repo.owner !== this.settings.owner || j.repo.repo !== this.settings.repo)) {
+          if (await this.flush()) location.reload();
+          return;
+        }
+        toast(j.changed?.length ? 'Settings saved.' : 'Nothing changed.');
+      } catch (ex) {
+        err.textContent = ex.message;
+        err.hidden = false;
+        btn.disabled = false;
+      }
+    });
   }
 
   popover(anchor, html, bind) {

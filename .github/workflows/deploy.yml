@@ -97,5 +97,5 @@ jobs:
           ssh-keyscan -T 15 -p "$PORT" "$HOST" > ~/.ssh/known_hosts 2>/dev/null
           SSH="ssh -p $PORT -i ~/.ssh/id_deploy -o BatchMode=yes"
           if ! $SSH "$USER@$HOST" "test -d \"$TARGET\""; then echo "::error::Folder '$TARGET' not found on the server."; exit 1; fi
-          rsync -az --delete --exclude '.htaccess' --exclude '.well-known/' -e "$SSH" dist/ "$USER@$HOST:$TARGET/"
+          rsync -az --delete --exclude '/.htaccess' --exclude '.well-known/' --exclude 'api/data/' -e "$SSH" dist/ "$USER@$HOST:$TARGET/"
           echo "::notice::Deployed to $TARGET"
