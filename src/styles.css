@@ -322,6 +322,8 @@ code { font-family: var(--mono); font-size: 0.88em; }
 .cb-grid .jss_content { overflow: visible; padding: 0; box-shadow: none; }
 .cb-grid .jss_worksheet { font-size: 14px; font-variant-numeric: tabular-nums; border-collapse: separate; }
 .cb-grid .jss_worksheet > thead > tr > td { font-weight: 600; font-size: 12.5px; color: var(--muted); padding: 5px 8px; }
+/* Column headings are always centred, whatever the column's own alignment. */
+.cb-grid .jss_worksheet > thead > tr > td { text-align: center !important; }
 .cb-grid .jss_worksheet > tbody > tr > td { padding: 5px 8px; line-height: 1.4; }
 .cb-grid .jss_worksheet > tbody > tr > td:first-child, .cb-grid .jss_worksheet > tfoot > tr > td:first-child { font-size: 11.5px; color: var(--faint); width: 36px; text-align: center; }
 .cb-grid .jss_worksheet td.cb-cell-error { color: var(--danger); }

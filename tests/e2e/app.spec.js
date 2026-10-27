@@ -68,6 +68,8 @@ test('loads notes and folders, opens a note with a spreadsheet', async ({ page }
   await expect(sheet.locator('thead')).toContainText('Supplier');
   await expect(sheet.locator('tfoot.cb-totals')).toContainText('£1,839.00');
   await expect(sheet.locator('tfoot.cb-totals')).toContainText('£306.50');
+  // Column headings are centred, whether the column holds text or numbers.
+  for (const i of [1, 4]) await expect(sheet.locator('thead td').nth(i)).toHaveCSS('text-align', 'center');
   await shot(page, '01-kitchen', info);
   expect(problems).toEqual([]);
 });

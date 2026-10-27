@@ -7,7 +7,7 @@
 
 if (!defined('COMMITBOOK')) { http_response_code(404); exit; }
 
-const CB_VERSION = '0.4.0';
+const CB_VERSION = '0.4.1';
 const CB_REMEMBER_DAYS = 90;
 const CB_MAX_FAILS = 5;          // per address, per window
 const CB_MAX_FAILS_ALL = 25;     // from everywhere, per window
