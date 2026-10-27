@@ -1,0 +1,176 @@
+
+> commitbook@0.4.1 test:unit
+> node --test tests/unit/*.test.js
+
+TAP version 13
+# Subtest: front matter round trip
+ok 1 - front matter round trip
+  ---
+  duration_ms: 8.430495
+  type: 'test'
+  ...
+# Subtest: front matter: hand-written variants and none at all
+ok 2 - front matter: hand-written variants and none at all
+  ---
+  duration_ms: 2.443783
+  type: 'test'
+  ...
+# Subtest: sheet markdown round trip
+ok 3 - sheet markdown round trip
+  ---
+  duration_ms: 3.360494
+  type: 'test'
+  ...
+# Subtest: plain tables load as sheets; non-tables do not
+ok 4 - plain tables load as sheets; non-tables do not
+  ---
+  duration_ms: 0.481044
+  type: 'test'
+  ...
+# Subtest: row references follow sorted rows
+ok 5 - row references follow sorted rows
+  ---
+  duration_ms: 2.67615
+  type: 'test'
+  ...
+# Subtest: number formats
+ok 6 - number formats
+  ---
+  duration_ms: 0.731846
+  type: 'test'
+  ...
+# Subtest: names, paths and text helpers
+ok 7 - names, paths and text helpers
+  ---
+  duration_ms: 3.024093
+  type: 'test'
+  ...
+# Subtest: previews leave out spreadsheet contents
+ok 8 - previews leave out spreadsheet contents
+  ---
+  duration_ms: 0.406054
+  type: 'test'
+  ...
+# Subtest: dates and times
+ok 9 - dates and times
+  ---
+  duration_ms: 3.582703
+  type: 'test'
+  ...
+# Subtest: blank and automatic column names
+ok 10 - blank and automatic column names
+  ---
+  duration_ms: 1.035416
+  type: 'test'
+  ...
+# Subtest: formula helper: functions and the word at the caret
+ok 11 - formula helper: functions and the word at the caret
+  ---
+  duration_ms: 2.735893
+  type: 'test'
+  ...
+# Subtest: history grouped by day
+ok 12 - history grouped by day
+  ---
+  duration_ms: 1.022091
+  type: 'test'
+  ...
+# Subtest: server side: setup, sign in and out, proxy limits, key stays on the server
+ok 13 - server side: setup, sign in and out, proxy limits, key stays on the server
+  ---
+  duration_ms: 319.737194
+  type: 'test'
+  ...
+# Subtest: server side: sign-in, keep me signed in, lockout and settings
+ok 14 - server side: sign-in, keep me signed in, lockout and settings
+  ---
+  duration_ms: 2962.32416
+  type: 'test'
+  ...
+# Subtest: the whole notebook works through the server, without the key in the app
+ok 15 - the whole notebook works through the server, without the key in the app
+  ---
+  duration_ms: 113.743879
+  type: 'test'
+  ...
+# Subtest: git blob sha matches git
+ok 16 - git blob sha matches git
+  ---
+  duration_ms: 7.940194
+  type: 'test'
+  ...
+# Subtest: loads notes, folders and tags; ignores repo docs and hidden files
+ok 17 - loads notes, folders and tags; ignores repo docs and hidden files
+  ---
+  duration_ms: 40.705865
+  type: 'test'
+  ...
+# Subtest: an empty repository is set up on first load
+ok 18 - an empty repository is set up on first load
+  ---
+  duration_ms: 5.788397
+  type: 'test'
+  ...
+# Subtest: create, edit and detect conflicts
+ok 19 - create, edit and detect conflicts
+  ---
+  duration_ms: 19.412317
+  type: 'test'
+  ...
+# Subtest: refresh picks up changes made elsewhere
+ok 20 - refresh picks up changes made elsewhere
+  ---
+  duration_ms: 6.424123
+  type: 'test'
+  ...
+# Subtest: folders: create, move a note in, rename, delete to Trash
+ok 21 - folders: create, move a note in, rename, delete to Trash
+  ---
+  duration_ms: 109.974728
+  type: 'test'
+  ...
+# Subtest: trash: delete keeps the folder, restore puts the note back
+ok 22 - trash: delete keeps the folder, restore puts the note back
+  ---
+  duration_ms: 7.648967
+  type: 'test'
+  ...
+# Subtest: tags: add, rename everywhere, delete everywhere
+ok 23 - tags: add, rename everywhere, delete everywhere
+  ---
+  duration_ms: 11.053335
+  type: 'test'
+  ...
+# Subtest: history: list versions, view one, restore it, search old text
+ok 24 - history: list versions, view one, restore it, search old text
+  ---
+  duration_ms: 6.18299
+  type: 'test'
+  ...
+# Subtest: several saves in a row keep working after someone else commits a different file
+ok 25 - several saves in a row keep working after someone else commits a different file
+  ---
+  duration_ms: 2.73999
+  type: 'test'
+  ...
+# Subtest: history follows a note through moves, the Trash and back
+ok 26 - history follows a note through moves, the Trash and back
+  ---
+  duration_ms: 12.922743
+  type: 'test'
+  ...
+# Subtest: history is not confused by a different note later using the old path
+ok 27 - history is not confused by a different note later using the old path
+  ---
+  duration_ms: 3.148828
+  type: 'test'
+  ...
+1..27
+# tests 27
+# suites 0
+# pass 27
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 3596.189856

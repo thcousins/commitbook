@@ -1,0 +1,404 @@
+[WebServer] [Tue Oct 27 12:10:04 2026] PHP 8.3.6 Development Server (http://127.0.0.1:4175) started
+[WebServer] [Tue Oct 27 12:10:04 2026] 127.0.0.1:46600 Accepted
+[WebServer] [Tue Oct 27 12:10:04 2026] 127.0.0.1:46600 [200]: GET /api/session.php
+[WebServer] [Tue Oct 27 12:10:04 2026] 127.0.0.1:46600 Closing
+
+Running 46 tests using 2 workers
+
+[WebServer] [Tue Oct 27 12:10:05 2026] 127.0.0.1:46602 Accepted
+[WebServer] [Tue Oct 27 12:10:05 2026] 127.0.0.1:46602 [200]: GET /
+[WebServer] [Tue Oct 27 12:10:05 2026] 127.0.0.1:46602 Closing
+[WebServer] [Tue Oct 27 12:10:05 2026] 127.0.0.1:46616 Accepted
+[WebServer] [Tue Oct 27 12:10:05 2026] 127.0.0.1:46616 [200]: GET /theme-init.js
+[WebServer] [Tue Oct 27 12:10:05 2026] 127.0.0.1:46616 Closing
+[WebServer] [Tue Oct 27 12:10:05 2026] 127.0.0.1:46626 Accepted
+[WebServer] [Tue Oct 27 12:10:05 2026] 127.0.0.1:46632 Accepted
+[WebServer] [Tue Oct 27 12:10:05 2026] 127.0.0.1:46626 [200]: GET /assets/index-i2bk7Jhy.css
+[WebServer] [Tue Oct 27 12:10:05 2026] 127.0.0.1:46632 [200]: GET /assets/index-DA433pcF.js
+[WebServer] [Tue Oct 27 12:10:05 2026] 127.0.0.1:46626 Closing
+[WebServer] [Tue Oct 27 12:10:05 2026] 127.0.0.1:46632 Closing
+[WebServer] [Tue Oct 27 12:10:05 2026] 127.0.0.1:46644 Accepted
+[WebServer] [Tue Oct 27 12:10:05 2026] 127.0.0.1:46644 [200]: GET /api/session.php
+[WebServer] [Tue Oct 27 12:10:05 2026] 127.0.0.1:46644 Closing
+[WebServer] [Tue Oct 27 12:10:05 2026] 127.0.0.1:46654 Accepted
+[WebServer] [Tue Oct 27 12:10:05 2026] 127.0.0.1:46654 [303]: POST /api/setup.php
+[WebServer] [Tue Oct 27 12:10:05 2026] 127.0.0.1:46654 Closing
+[WebServer] [Tue Oct 27 12:10:05 2026] 127.0.0.1:46660 Accepted
+[WebServer] [Tue Oct 27 12:10:05 2026] 127.0.0.1:46660 [200]: GET /?setup=github&msg=GitHub+didn%E2%80%99t+accept+the+access+key.+Check+it+was+copied+in+full+and+hasn%E2%80%99t+expired.&u=tom&r=me%2Fnotes
+[WebServer] [Tue Oct 27 12:10:05 2026] 127.0.0.1:46660 Closing
+[WebServer] [Tue Oct 27 12:10:05 2026] 127.0.0.1:46670 Accepted
+[WebServer] [Tue Oct 27 12:10:05 2026] 127.0.0.1:46670 [200]: GET /theme-init.js
+[WebServer] [Tue Oct 27 12:10:05 2026] 127.0.0.1:46670 Closing
+[WebServer] [Tue Oct 27 12:10:05 2026] 127.0.0.1:46676 Accepted
+[WebServer] [Tue Oct 27 12:10:05 2026] 127.0.0.1:46686 Accepted
+[WebServer] [Tue Oct 27 12:10:05 2026] 127.0.0.1:46686 [200]: GET /assets/index-i2bk7Jhy.css
+[WebServer] [Tue Oct 27 12:10:05 2026] 127.0.0.1:46686 Closing
+[WebServer] [Tue Oct 27 12:10:05 2026] 127.0.0.1:46676 [200]: GET /assets/index-DA433pcF.js
+[WebServer] [Tue Oct 27 12:10:05 2026] 127.0.0.1:46676 Closing
+[WebServer] [Tue Oct 27 12:10:05 2026] 127.0.0.1:46698 Accepted
+[WebServer] [Tue Oct 27 12:10:05 2026] 127.0.0.1:46698 [200]: GET /api/session.php
+[WebServer] [Tue Oct 27 12:10:05 2026] 127.0.0.1:46698 Closing
+[WebServer] [Tue Oct 27 12:10:05 2026] 127.0.0.1:46706 Accepted
+[WebServer] [Tue Oct 27 12:10:05 2026] 127.0.0.1:46706 [303]: POST /api/setup.php
+[WebServer] [Tue Oct 27 12:10:05 2026] 127.0.0.1:46706 Closing
+[WebServer] [Tue Oct 27 12:10:05 2026] 127.0.0.1:46712 Accepted
+[WebServer] [Tue Oct 27 12:10:05 2026] 127.0.0.1:46712 [200]: GET /?setup=ok
+[WebServer] [Tue Oct 27 12:10:05 2026] 127.0.0.1:46712 Closing
+[WebServer] [Tue Oct 27 12:10:05 2026] 127.0.0.1:46724 Accepted
+[WebServer] [Tue Oct 27 12:10:05 2026] 127.0.0.1:46724 [200]: GET /theme-init.js
+[WebServer] [Tue Oct 27 12:10:05 2026] 127.0.0.1:46724 Closing
+[WebServer] [Tue Oct 27 12:10:05 2026] 127.0.0.1:46732 Accepted
+[WebServer] [Tue Oct 27 12:10:05 2026] 127.0.0.1:46744 Accepted
+[WebServer] [Tue Oct 27 12:10:05 2026] 127.0.0.1:46744 [200]: GET /assets/index-i2bk7Jhy.css
+[WebServer] [Tue Oct 27 12:10:05 2026] 127.0.0.1:46732 [200]: GET /assets/index-DA433pcF.js
+[WebServer] [Tue Oct 27 12:10:05 2026] 127.0.0.1:46744 Closing
+[WebServer] [Tue Oct 27 12:10:05 2026] 127.0.0.1:46732 Closing
+[WebServer] [Tue Oct 27 12:10:05 2026] 127.0.0.1:46760 Accepted
+[WebServer] [Tue Oct 27 12:10:05 2026] 127.0.0.1:46760 [200]: GET /api/session.php
+[WebServer] [Tue Oct 27 12:10:05 2026] 127.0.0.1:46760 Closing
+[WebServer] [Tue Oct 27 12:10:05 2026] 127.0.0.1:46774 Accepted
+[WebServer] [Tue Oct 27 12:10:05 2026] 127.0.0.1:46788 Accepted
+[WebServer] [Tue Oct 27 12:10:05 2026] 127.0.0.1:46774 [200]: GET /assets/app-BrRuWZIJ.css
+[WebServer] [Tue Oct 27 12:10:05 2026] 127.0.0.1:46788 [200]: GET /assets/app-8KIsz2Lu.js
+[WebServer] [Tue Oct 27 12:10:05 2026] 127.0.0.1:46774 Closing
+[WebServer] [Tue Oct 27 12:10:05 2026] 127.0.0.1:46788 Closing
+[WebServer] [Tue Oct 27 12:10:06 2026] 127.0.0.1:46796 Accepted
+[WebServer] [Tue Oct 27 12:10:06 2026] 127.0.0.1:46796 [200]: GET /api/github.php?p=%2Frepos%2Fme%2Fnotes
+[WebServer] [Tue Oct 27 12:10:06 2026] 127.0.0.1:46796 Closing
+[WebServer] [Tue Oct 27 12:10:06 2026] 127.0.0.1:46808 Accepted
+[WebServer] [Tue Oct 27 12:10:06 2026] 127.0.0.1:46808 [200]: GET /api/github.php?p=%2Frepos%2Fme%2Fnotes%2Fgit%2Fref%2Fheads%2Fmain
+[WebServer] [Tue Oct 27 12:10:06 2026] 127.0.0.1:46808 Closing
+[WebServer] [Tue Oct 27 12:10:06 2026] 127.0.0.1:46810 Accepted
+[WebServer] [Tue Oct 27 12:10:06 2026] 127.0.0.1:46810 [200]: GET /api/github.php?p=%2Frepos%2Fme%2Fnotes%2Fgit%2Ftrees%2F5ef4bdb6b79176f15d83af4b3259d508e5f3e19a%3Frecursive%3D1
+[WebServer] [Tue Oct 27 12:10:06 2026] 127.0.0.1:46810 Closing
+[WebServer] [Tue Oct 27 12:10:06 2026] 127.0.0.1:46818 Accepted
+[WebServer] [Tue Oct 27 12:10:06 2026] 127.0.0.1:46826 Accepted
+[WebServer] [Tue Oct 27 12:10:06 2026] 127.0.0.1:46832 Accepted
+[WebServer] [Tue Oct 27 12:10:06 2026] 127.0.0.1:46834 Accepted
+[WebServer] [Tue Oct 27 12:10:06 2026] 127.0.0.1:46818 [200]: GET /api/github.php?p=%2Frepos%2Fme%2Fnotes%2Fgit%2Fblobs%2F279bb640f95dde884f[WebServer] d2bf5fcbc50a4a44e17d5c
+[WebServer] [Tue Oct 27 12:10:06 2026] 127.0.0.1:46818 Closing
+[WebServer] [Tue Oct 27 12:10:06 2026] 127.0.0.1:46826 [200]: GET /api/github.php?p=%2Frepos%2Fme%2Fnotes%2Fgit%2Fblobs%2Fcb72a46007a41a4d8501fe5f2418bdbb9daffbe8
+[WebServer] [Tue Oct 27 12:10:06 2026] 127.0.0.1:46826 Closing
+[WebServer] [Tue Oct 27 12:10:06 2026] 127.0.0.1:46832 [200]: GET /api/github.php?p=%2Frepos%2Fme%2Fnotes%2Fgit%2Fblobs%2Fe40d6f642a375e240b5cfdbd07442414184a9760
+[WebServer] [Tue Oct 27 12:10:06 2026] 127.0.0.1:46832 Closing
+[WebServer] [Tue Oct 27 12:10:06 2026] 127.0.0.1:46834 [200]: GET /api/github.php?p=%2Frepos%2Fme%2Fnotes%2Fgit%2Fblobs%2Fb40af2e5e2d36881bc9d8dc4325a14ce5bfd4dad
+[WebServer] [Tue Oct 27 12:10:06 2026] 127.0.0.1:46834 Closing
+[WebServer] [Tue Oct 27 12:10:06 2026] 127.0.0.1:46840 Accepted
+[WebServer] [Tue Oct 27 12:10:06 2026] 127.0.0.1:46840 [200]: GET /api/github.php?p=%2Frepos%2Fme%2Fnotes%2Fgit%2Fblobs%2F8db9b03d19bace2ec8[WebServer] a4ef3b722322c98da10fa6
+[WebServer] [Tue Oct 27 12:10:06 2026] 127.0.0.1:46840 Closing
+  ✓   2 [chromium] › tests/e2e/app.spec.js:59:1 › loads notes and folders, opens a note with a spreadsheet (1.1s)
+  ✓   1 [chromium] › tests/e2e/hosted.spec.js:30:1 › first-time setup page (1.2s)
+[WebServer] [Tue Oct 27 12:10:06 2026] 127.0.0.1:46856 Accepted
+[WebServer] [Tue Oct 27 12:10:06 2026] 127.0.0.1:46856 [200]: GET /
+[WebServer] [Tue Oct 27 12:10:06 2026] 127.0.0.1:46856 Closing
+[WebServer] [Tue Oct 27 12:10:06 2026] 127.0.0.1:46862 Accepted
+[WebServer] [Tue Oct 27 12:10:06 2026] 127.0.0.1:46862 [200]: GET /theme-init.js
+[WebServer] [Tue Oct 27 12:10:06 2026] 127.0.0.1:46862 Closing
+[WebServer] [Tue Oct 27 12:10:06 2026] 127.0.0.1:46876 Accepted
+[WebServer] [Tue Oct 27 12:10:06 2026] 127.0.0.1:46878 Accepted
+[WebServer] [Tue Oct 27 12:10:06 2026] 127.0.0.1:46876 [200]: GET /assets/index-i2bk7Jhy.css
+[WebServer] [Tue Oct 27 12:10:06 2026] 127.0.0.1:46878 [200]: GET /assets/index-DA433pcF.js
+[WebServer] [Tue Oct 27 12:10:06 2026] 127.0.0.1:46876 Closing
+[WebServer] [Tue Oct 27 12:10:06 2026] 127.0.0.1:46878 Closing
+[WebServer] [Tue Oct 27 12:10:06 2026] 127.0.0.1:46890 Accepted
+[WebServer] [Tue Oct 27 12:10:06 2026] 127.0.0.1:46890 [200]: GET /api/session.php
+[WebServer] [Tue Oct 27 12:10:06 2026] 127.0.0.1:46890 Closing
+[WebServer] [Tue Oct 27 12:10:06 2026] 127.0.0.1:46906 Accepted
+[WebServer] [Tue Oct 27 12:10:06 2026] 127.0.0.1:46906 [303]: POST /api/login.php
+[WebServer] [Tue Oct 27 12:10:06 2026] 127.0.0.1:46906 Closing
+[WebServer] [Tue Oct 27 12:10:06 2026] 127.0.0.1:46914 Accepted
+[WebServer] [Tue Oct 27 12:10:06 2026] 127.0.0.1:46914 [200]: GET /
+[WebServer] [Tue Oct 27 12:10:06 2026] 127.0.0.1:46914 Closing
+[WebServer] [Tue Oct 27 12:10:06 2026] 127.0.0.1:46916 Accepted
+[WebServer] [Tue Oct 27 12:10:06 2026] 127.0.0.1:46916 [200]: GET /theme-init.js
+[WebServer] [Tue Oct 27 12:10:06 2026] 127.0.0.1:46916 Closing
+[WebServer] [Tue Oct 27 12:10:06 2026] 127.0.0.1:46930 Accepted
+[WebServer] [Tue Oct 27 12:10:06 2026] 127.0.0.1:46930 [200]: GET /assets/index-DA433pcF.js
+[WebServer] [Tue Oct 27 12:10:06 2026] 127.0.0.1:46930 Closing
+[WebServer] [Tue Oct 27 12:10:06 2026] 127.0.0.1:46940 Accepted
+[WebServer] [Tue Oct 27 12:10:06 2026] 127.0.0.1:46940 [200]: GET /assets/index-i2bk7Jhy.css
+[WebServer] [Tue Oct 27 12:10:06 2026] 127.0.0.1:46940 Closing
+[WebServer] [Tue Oct 27 12:10:06 2026] 127.0.0.1:46956 Accepted
+[WebServer] [Tue Oct 27 12:10:06 2026] 127.0.0.1:46956 [200]: GET /api/session.php
+[WebServer] [Tue Oct 27 12:10:06 2026] 127.0.0.1:46956 Closing
+[WebServer] [Tue Oct 27 12:10:06 2026] 127.0.0.1:46966 Accepted
+[WebServer] [Tue Oct 27 12:10:06 2026] 127.0.0.1:46980 Accepted
+[WebServer] [Tue Oct 27 12:10:06 2026] 127.0.0.1:46966 [200]: GET /assets/app-BrRuWZIJ.css
+[WebServer] [Tue Oct 27 12:10:06 2026] 127.0.0.1:46980 [200]: GET /assets/app-8KIsz2Lu.js
+[WebServer] [Tue Oct 27 12:10:06 2026] 127.0.0.1:46966 Closing
+[WebServer] [Tue Oct 27 12:10:06 2026] 127.0.0.1:46980 Closing
+[WebServer] [Tue Oct 27 12:10:06 2026] 127.0.0.1:46982 Accepted
+[WebServer] [Tue Oct 27 12:10:06 2026] 127.0.0.1:46982 [200]: GET /api/github.php?p=%2Frepos%2Fme%2Fnotes
+[WebServer] [Tue Oct 27 12:10:06 2026] 127.0.0.1:46982 Closing
+[WebServer] [Tue Oct 27 12:10:06 2026] 127.0.0.1:46992 Accepted
+[WebServer] [Tue Oct 27 12:10:06 2026] 127.0.0.1:46992 [200]: GET /api/github.php?p=%2Frepos%2Fme%2Fnotes%2Fgit%2Fref%2Fheads%2Fmain
+[WebServer] [Tue Oct 27 12:10:06 2026] 127.0.0.1:46992 Closing
+[WebServer] [Tue Oct 27 12:10:06 2026] 127.0.0.1:46994 Accepted
+[WebServer] [Tue Oct 27 12:10:06 2026] 127.0.0.1:46994 [200]: GET /api/github.php?p=%2Frepos%2Fme%2Fnotes%2Fgit%2Ftrees%2F5ef4bdb6b79176f15d83af4b3259d508e5f3e19a%3Frecursive%3D1
+[WebServer] [Tue Oct 27 12:10:06 2026] 127.0.0.1:46994 Closing
+[WebServer] [Tue Oct 27 12:10:06 2026] 127.0.0.1:47008 Accepted
+[WebServer] [Tue Oct 27 12:10:06 2026] 127.0.0.1:47016 Accepted
+[WebServer] [Tue Oct 27 12:10:06 2026] 127.0.0.1:47008 [200]: GET /api/github.php?p=%2Frepos%2Fme%2Fnotes%2Fgit%2Fblobs%2F279bb640f95dde884fd2bf5fcbc50a4a44e17d5c
+[WebServer] [Tue Oct 27 12:10:06 2026] 127.0.0.1:47008 Closing
+[WebServer] [Tue Oct 27 12:10:06 2026] 127.0.0.1:47018 Accepted
+[WebServer] [Tue Oct 27 12:10:06 2026] 127.0.0.1:47016 [200]: GET /api/github.php?p=%2Frepos%2Fme%2Fnotes%2Fgit%2Fblobs%2Fcb72a46007a41a4d85[WebServer] 01fe5f2418bdbb9daffbe8
+[WebServer] [Tue Oct 27 12:10:06 2026] 127.0.0.1:47016 Closing
+[WebServer] [Tue Oct 27 12:10:06 2026] 127.0.0.1:47022 Accepted
+[WebServer] [Tue Oct 27 12:10:06 2026] 127.0.0.1:47018 [200]: GET /api/github.php?p=%2Frepos%2Fme%2Fnotes%2Fgit%2Fblobs%2Fe40d6f642a375e240b[WebServer] 5cfdbd07442414184a9760
+[WebServer] [Tue Oct 27 12:10:06 2026] 127.0.0.1:47018 Closing
+[WebServer] [Tue Oct 27 12:10:06 2026] 127.0.0.1:47022 [200]: GET /api/github.php?p=%2Frepos%2Fme%2Fnotes%2Fgit%2Fblobs%2Fb40af2e5e2d36881bc9d8dc4325a14ce5bfd4dad
+[WebServer] [Tue Oct 27 12:10:06 2026] 127.0.0.1:47022 Closing
+[WebServer] [Tue Oct 27 12:10:06 2026] 127.0.0.1:47032 Accepted
+[WebServer] [Tue Oct 27 12:10:06 2026] 127.0.0.1:47032 [200]: GET /api/github.php?p=%2Frepos%2Fme%2Fnotes%2Fgit%2Fblobs%2F8db9b03d19bace2ec8a4ef3b722322c98da10fa6
+[WebServer] [Tue Oct 27 12:10:06 2026] 127.0.0.1:47032 Closing
+[WebServer] [Tue Oct 27 12:10:09 2026] 127.0.0.1:47046 Accepted
+[WebServer] [Tue Oct 27 12:10:09 2026] 127.0.0.1:47046 [200]: PUT /api/github.php?p=%2Frepos%2Fme%2Fnotes%2Fcontents%2Fgift-ideas.md
+[WebServer] [Tue Oct 27 12:10:09 2026] 127.0.0.1:47046 Closing
+  ✓   3 [chromium] › tests/e2e/app.spec.js:77:1 › typing saves automatically and keeps the file format (3.6s)
+  ✓   4 [chromium] › tests/e2e/hosted.spec.js:55:1 › edit a note through the server (3.7s)
+[WebServer] [Tue Oct 27 12:10:10 2026] 127.0.0.1:47052 Accepted
+[WebServer] [Tue Oct 27 12:10:10 2026] 127.0.0.1:47052 [200]: GET /
+[WebServer] [Tue Oct 27 12:10:10 2026] 127.0.0.1:47052 Closing
+[WebServer] [Tue Oct 27 12:10:10 2026] 127.0.0.1:47060 Accepted
+[WebServer] [Tue Oct 27 12:10:10 2026] 127.0.0.1:47060 [200]: GET /theme-init.js
+[WebServer] [Tue Oct 27 12:10:10 2026] 127.0.0.1:47060 Closing
+[WebServer] [Tue Oct 27 12:10:10 2026] 127.0.0.1:47064 Accepted
+[WebServer] [Tue Oct 27 12:10:10 2026] 127.0.0.1:47080 Accepted
+[WebServer] [Tue Oct 27 12:10:10 2026] 127.0.0.1:47064 [200]: GET /assets/index-i2bk7Jhy.css
+[WebServer] [Tue Oct 27 12:10:10 2026] 127.0.0.1:47080 [200]: GET /assets/index-DA433pcF.js
+[WebServer] [Tue Oct 27 12:10:10 2026] 127.0.0.1:47064 Closing
+[WebServer] [Tue Oct 27 12:10:10 2026] 127.0.0.1:47080 Closing
+[WebServer] [Tue Oct 27 12:10:10 2026] 127.0.0.1:47082 Accepted
+[WebServer] [Tue Oct 27 12:10:10 2026] 127.0.0.1:47082 [200]: GET /api/session.php
+[WebServer] [Tue Oct 27 12:10:10 2026] 127.0.0.1:47082 Closing
+[WebServer] [Tue Oct 27 12:10:10 2026] 127.0.0.1:47090 Accepted
+[WebServer] [Tue Oct 27 12:10:10 2026] 127.0.0.1:47090 [303]: POST /api/login.php
+[WebServer] [Tue Oct 27 12:10:10 2026] 127.0.0.1:47090 Closing
+[WebServer] [Tue Oct 27 12:10:10 2026] 127.0.0.1:47102 Accepted
+[WebServer] [Tue Oct 27 12:10:10 2026] 127.0.0.1:47102 [200]: GET /
+[WebServer] [Tue Oct 27 12:10:10 2026] 127.0.0.1:47102 Closing
+[WebServer] [Tue Oct 27 12:10:10 2026] 127.0.0.1:47104 Accepted
+[WebServer] [Tue Oct 27 12:10:10 2026] 127.0.0.1:47104 [200]: GET /theme-init.js
+[WebServer] [Tue Oct 27 12:10:10 2026] 127.0.0.1:47104 Closing
+[WebServer] [Tue Oct 27 12:10:10 2026] 127.0.0.1:47106 Accepted
+[WebServer] [Tue Oct 27 12:10:10 2026] 127.0.0.1:47106 [200]: GET /assets/index-DA433pcF.js
+[WebServer] [Tue Oct 27 12:10:10 2026] 127.0.0.1:47106 Closing
+[WebServer] [Tue Oct 27 12:10:10 2026] 127.0.0.1:47116 Accepted
+[WebServer] [Tue Oct 27 12:10:10 2026] 127.0.0.1:47116 [200]: GET /assets/index-i2bk7Jhy.css
+[WebServer] [Tue Oct 27 12:10:10 2026] 127.0.0.1:47116 Closing
+[WebServer] [Tue Oct 27 12:10:10 2026] 127.0.0.1:47122 Accepted
+[WebServer] [Tue Oct 27 12:10:10 2026] 127.0.0.1:47122 [200]: GET /api/session.php
+[WebServer] [Tue Oct 27 12:10:10 2026] 127.0.0.1:47122 Closing
+[WebServer] [Tue Oct 27 12:10:10 2026] 127.0.0.1:47128 Accepted
+[WebServer] [Tue Oct 27 12:10:10 2026] 127.0.0.1:47140 Accepted
+[WebServer] [Tue Oct 27 12:10:10 2026] 127.0.0.1:47128 [200]: GET /assets/app-BrRuWZIJ.css
+[WebServer] [Tue Oct 27 12:10:10 2026] 127.0.0.1:47140 [200]: GET /assets/app-8KIsz2Lu.js
+[WebServer] [Tue Oct 27 12:10:10 2026] 127.0.0.1:47128 Closing
+[WebServer] [Tue Oct 27 12:10:10 2026] 127.0.0.1:47140 Closing
+[WebServer] [Tue Oct 27 12:10:10 2026] 127.0.0.1:47156 Accepted
+[WebServer] [Tue Oct 27 12:10:10 2026] 127.0.0.1:47156 [200]: GET /api/github.php?p=%2Frepos%2Fme%2Fnotes
+[WebServer] [Tue Oct 27 12:10:10 2026] 127.0.0.1:47156 Closing
+[WebServer] [Tue Oct 27 12:10:10 2026] 127.0.0.1:47166 Accepted
+[WebServer] [Tue Oct 27 12:10:10 2026] 127.0.0.1:47166 [200]: GET /api/github.php?p=%2Frepos%2Fme%2Fnotes%2Fgit%2Fref%2Fheads%2Fmain
+[WebServer] [Tue Oct 27 12:10:10 2026] 127.0.0.1:47166 Closing
+[WebServer] [Tue Oct 27 12:10:10 2026] 127.0.0.1:47180 Accepted
+[WebServer] [Tue Oct 27 12:10:10 2026] 127.0.0.1:47180 [200]: GET /api/github.php?p=%2Frepos%2Fme%2Fnotes%2Fgit%2Ftrees%2F67cbd6e28b2cfc66969f6c9c4108855d9b87d60c%3Frecursive%3D1
+[WebServer] [Tue Oct 27 12:10:10 2026] 127.0.0.1:47180 Closing
+[WebServer] [Tue Oct 27 12:10:10 2026] 127.0.0.1:47192 Accepted
+[WebServer] [Tue Oct 27 12:10:10 2026] 127.0.0.1:47198 Accepted
+[WebServer] [Tue Oct 27 12:10:10 2026] 127.0.0.1:47204 Accepted
+[WebServer] [Tue Oct 27 12:10:10 2026] 127.0.0.1:47192 [200]: GET /api/github.php?p=%2Frepos%2Fme%2Fnotes%2Fgit%2Fblobs%2F279bb640f95dde884fd2bf5fcbc50a4a44e17d5c
+[WebServer] [Tue Oct 27 12:10:10 2026] 127.0.0.1:47192 Closing
+[WebServer] [Tue Oct 27 12:10:10 2026] 127.0.0.1:47208 Accepted
+[WebServer] [Tue Oct 27 12:10:10 2026] 127.0.0.1:47198 [200]: GET /api/github.php?p=%2Frepos%2Fme%2Fnotes%2Fgit%2Fblobs%2F0d23a1de8a21448e06[WebServer] 040135a65606c0016a9a7f
+[WebServer] [Tue Oct 27 12:10:10 2026] 127.0.0.1:47198 Closing
+[WebServer] [Tue Oct 27 12:10:10 2026] 127.0.0.1:47204 [200]: GET /api/github.php?p=%2Frepos%2Fme%2Fnotes%2Fgit%2Fblobs%2Fe40d6f642a375e240b5cfdbd07442414184a9760
+[WebServer] [Tue Oct 27 12:10:10 2026] 127.0.0.1:47204 Closing
+[WebServer] [Tue Oct 27 12:10:10 2026] 127.0.0.1:47208 [200]: GET /api/github.php?p=%2Frepos%2Fme%2Fnotes%2Fgit%2Fblobs%2Fb40af2e5e2d36881bc9d8dc4325a14ce5bfd4dad
+[WebServer] [Tue Oct 27 12:10:10 2026] 127.0.0.1:47208 Closing
+[WebServer] [Tue Oct 27 12:10:10 2026] 127.0.0.1:47224 Accepted
+[WebServer] [Tue Oct 27 12:10:10 2026] 127.0.0.1:47224 [200]: GET /api/github.php?p=%2Frepos%2Fme%2Fnotes%2Fgit%2Fblobs%2F8db9b03d19bace2ec8a4ef3b722322c98da10fa6
+[WebServer] [Tue Oct 27 12:10:10 2026] 127.0.0.1:47224 Closing
+[WebServer] [Tue Oct 27 12:10:10 2026] 127.0.0.1:47234 Accepted
+[WebServer] [Tue Oct 27 12:10:10 2026] 127.0.0.1:47234 [200]: POST /api/logout.php
+[WebServer] [Tue Oct 27 12:10:10 2026] 127.0.0.1:47234 Closing
+[WebServer] [Tue Oct 27 12:10:10 2026] 127.0.0.1:47248 Accepted
+[WebServer] [Tue Oct 27 12:10:10 2026] 127.0.0.1:47248 [200]: GET /?signedout=1
+[WebServer] [Tue Oct 27 12:10:10 2026] 127.0.0.1:47248 Closing
+[WebServer] [Tue Oct 27 12:10:10 2026] 127.0.0.1:47262 Accepted
+[WebServer] [Tue Oct 27 12:10:10 2026] 127.0.0.1:47262 [200]: GET /theme-init.js
+[WebServer] [Tue Oct 27 12:10:10 2026] 127.0.0.1:47262 Closing
+[WebServer] [Tue Oct 27 12:10:10 2026] 127.0.0.1:47274 Accepted
+[WebServer] [Tue Oct 27 12:10:10 2026] 127.0.0.1:47276 Accepted
+[WebServer] [Tue Oct 27 12:10:10 2026] 127.0.0.1:47276 [200]: GET /assets/index-i2bk7Jhy.css
+[WebServer] [Tue Oct 27 12:10:10 2026] 127.0.0.1:47274 [200]: GET /assets/index-DA433pcF.js
+[WebServer] [Tue Oct 27 12:10:10 2026] 127.0.0.1:47276 Closing
+[WebServer] [Tue Oct 27 12:10:10 2026] 127.0.0.1:47274 Closing
+[WebServer] [Tue Oct 27 12:10:10 2026] 127.0.0.1:47282 Accepted
+[WebServer] [Tue Oct 27 12:10:10 2026] 127.0.0.1:47282 [200]: GET /api/session.php
+[WebServer] [Tue Oct 27 12:10:10 2026] 127.0.0.1:47282 Closing
+[WebServer] [Tue Oct 27 12:10:10 2026] 127.0.0.1:47288 Accepted
+[WebServer] [Tue Oct 27 12:10:11 2026] 127.0.0.1:47288 [303]: POST /api/login.php
+[WebServer] [Tue Oct 27 12:10:11 2026] 127.0.0.1:47288 Closing
+[WebServer] [Tue Oct 27 12:10:11 2026] 127.0.0.1:60936 Accepted
+[WebServer] [Tue Oct 27 12:10:11 2026] 127.0.0.1:60936 [200]: GET /?signin=failed&u=tom
+[WebServer] [Tue Oct 27 12:10:11 2026] 127.0.0.1:60936 Closing
+[WebServer] [Tue Oct 27 12:10:11 2026] 127.0.0.1:60950 Accepted
+[WebServer] [Tue Oct 27 12:10:11 2026] 127.0.0.1:60950 [200]: GET /theme-init.js
+[WebServer] [Tue Oct 27 12:10:11 2026] 127.0.0.1:60950 Closing
+[WebServer] [Tue Oct 27 12:10:11 2026] 127.0.0.1:60952 Accepted
+[WebServer] [Tue Oct 27 12:10:11 2026] 127.0.0.1:60964 Accepted
+[WebServer] [Tue Oct 27 12:10:11 2026] 127.0.0.1:60952 [200]: GET /assets/index-DA433pcF.js
+[WebServer] [Tue Oct 27 12:10:11 2026] 127.0.0.1:60964 [200]: GET /assets/index-i2bk7Jhy.css
+[WebServer] [Tue Oct 27 12:10:11 2026] 127.0.0.1:60952 Closing
+[WebServer] [Tue Oct 27 12:10:11 2026] 127.0.0.1:60964 Closing
+[WebServer] [Tue Oct 27 12:10:11 2026] 127.0.0.1:60972 Accepted
+[WebServer] [Tue Oct 27 12:10:11 2026] 127.0.0.1:60972 [200]: GET /api/session.php
+[WebServer] [Tue Oct 27 12:10:11 2026] 127.0.0.1:60972 Closing
+[WebServer] [Tue Oct 27 12:10:11 2026] 127.0.0.1:60988 Accepted
+[WebServer] [Tue Oct 27 12:10:11 2026] 127.0.0.1:60988 [303]: POST /api/login.php
+[WebServer] [Tue Oct 27 12:10:11 2026] 127.0.0.1:60988 Closing
+[WebServer] [Tue Oct 27 12:10:11 2026] 127.0.0.1:60992 Accepted
+[WebServer] [Tue Oct 27 12:10:11 2026] 127.0.0.1:60992 [200]: GET /
+[WebServer] [Tue Oct 27 12:10:11 2026] 127.0.0.1:60992 Closing
+[WebServer] [Tue Oct 27 12:10:11 2026] 127.0.0.1:32770 Accepted
+[WebServer] [Tue Oct 27 12:10:11 2026] 127.0.0.1:32770 [200]: GET /theme-init.js
+[WebServer] [Tue Oct 27 12:10:11 2026] 127.0.0.1:32770 Closing
+[WebServer] [Tue Oct 27 12:10:11 2026] 127.0.0.1:32776 Accepted
+[WebServer] [Tue Oct 27 12:10:11 2026] 127.0.0.1:32776 [200]: GET /assets/index-DA433pcF.js
+[WebServer] [Tue Oct 27 12:10:11 2026] 127.0.0.1:32776 Closing
+[WebServer] [Tue Oct 27 12:10:11 2026] 127.0.0.1:32782 Accepted
+[WebServer] [Tue Oct 27 12:10:11 2026] 127.0.0.1:32782 [200]: GET /assets/index-i2bk7Jhy.css
+[WebServer] [Tue Oct 27 12:10:11 2026] 127.0.0.1:32782 Closing
+[WebServer] [Tue Oct 27 12:10:11 2026] 127.0.0.1:32788 Accepted
+[WebServer] [Tue Oct 27 12:10:11 2026] 127.0.0.1:32788 [200]: GET /api/session.php
+[WebServer] [Tue Oct 27 12:10:11 2026] 127.0.0.1:32788 Closing
+[WebServer] [Tue Oct 27 12:10:11 2026] 127.0.0.1:32796 Accepted
+[WebServer] [Tue Oct 27 12:10:11 2026] 127.0.0.1:32810 Accepted
+[WebServer] [Tue Oct 27 12:10:11 2026] 127.0.0.1:32796 [200]: GET /assets/app-8KIsz2Lu.js
+[WebServer] [Tue Oct 27 12:10:11 2026] 127.0.0.1:32810 [200]: GET /assets/app-BrRuWZIJ.css
+[WebServer] [Tue Oct 27 12:10:11 2026] 127.0.0.1:32810 Closing
+[WebServer] [Tue Oct 27 12:10:11 2026] 127.0.0.1:32796 Closing
+[WebServer] [Tue Oct 27 12:10:11 2026] 127.0.0.1:32824 Accepted
+[WebServer] [Tue Oct 27 12:10:11 2026] 127.0.0.1:32824 [200]: GET /api/github.php?p=%2Frepos%2Fme%2Fnotes
+[WebServer] [Tue Oct 27 12:10:11 2026] 127.0.0.1:32824 Closing
+[WebServer] [Tue Oct 27 12:10:11 2026] 127.0.0.1:32838 Accepted
+[WebServer] [Tue Oct 27 12:10:11 2026] 127.0.0.1:32838 [200]: GET /api/github.php?p=%2Frepos%2Fme%2Fnotes%2Fgit%2Fref%2Fheads%2Fmain
+[WebServer] [Tue Oct 27 12:10:11 2026] 127.0.0.1:32838 Closing
+[WebServer] [Tue Oct 27 12:10:11 2026] 127.0.0.1:32844 Accepted
+[WebServer] [Tue Oct 27 12:10:11 2026] 127.0.0.1:32844 [200]: GET /api/github.php?p=%2Frepos%2Fme%2Fnotes%2Fgit%2Ftrees%2F67cbd6e28b2cfc66969f6c9c4108855d9b87d60c%3Frecursive%3D1
+[WebServer] [Tue Oct 27 12:10:11 2026] 127.0.0.1:32844 Closing
+  ✓   6 [chromium] › tests/e2e/hosted.spec.js:65:1 › sign out, then sign in with the sign-in page (1.9s)
+[WebServer] [Tue Oct 27 12:10:12 2026] 127.0.0.1:32856 Accepted
+[WebServer] [Tue Oct 27 12:10:12 2026] 127.0.0.1:32856 [200]: GET /
+[WebServer] [Tue Oct 27 12:10:12 2026] 127.0.0.1:32856 Closing
+[WebServer] [Tue Oct 27 12:10:12 2026] 127.0.0.1:32872 Accepted
+[WebServer] [Tue Oct 27 12:10:12 2026] 127.0.0.1:32872 [200]: GET /theme-init.js
+[WebServer] [Tue Oct 27 12:10:12 2026] 127.0.0.1:32872 Closing
+[WebServer] [Tue Oct 27 12:10:12 2026] 127.0.0.1:32880 Accepted
+[WebServer] [Tue Oct 27 12:10:12 2026] 127.0.0.1:32892 Accepted
+[WebServer] [Tue Oct 27 12:10:12 2026] 127.0.0.1:32880 [200]: GET /assets/index-i2bk7Jhy.css
+[WebServer] [Tue Oct 27 12:10:12 2026] 127.0.0.1:32892 [200]: GET /assets/index-DA433pcF.js
+[WebServer] [Tue Oct 27 12:10:12 2026] 127.0.0.1:32880 Closing
+[WebServer] [Tue Oct 27 12:10:12 2026] 127.0.0.1:32892 Closing
+[WebServer] [Tue Oct 27 12:10:12 2026] 127.0.0.1:32902 Accepted
+[WebServer] [Tue Oct 27 12:10:12 2026] 127.0.0.1:32902 [200]: GET /api/session.php
+[WebServer] [Tue Oct 27 12:10:12 2026] 127.0.0.1:32902 Closing
+[WebServer] [Tue Oct 27 12:10:12 2026] 127.0.0.1:32904 Accepted
+[WebServer] [Tue Oct 27 12:10:12 2026] 127.0.0.1:32904 [303]: POST /api/login.php
+[WebServer] [Tue Oct 27 12:10:12 2026] 127.0.0.1:32904 Closing
+[WebServer] [Tue Oct 27 12:10:12 2026] 127.0.0.1:32918 Accepted
+[WebServer] [Tue Oct 27 12:10:12 2026] 127.0.0.1:32918 [200]: GET /
+[WebServer] [Tue Oct 27 12:10:12 2026] 127.0.0.1:32918 Closing
+[WebServer] [Tue Oct 27 12:10:12 2026] 127.0.0.1:32920 Accepted
+[WebServer] [Tue Oct 27 12:10:12 2026] 127.0.0.1:32920 [200]: GET /theme-init.js
+[WebServer] [Tue Oct 27 12:10:12 2026] 127.0.0.1:32920 Closing
+[WebServer] [Tue Oct 27 12:10:12 2026] 127.0.0.1:32924 Accepted
+[WebServer] [Tue Oct 27 12:10:12 2026] 127.0.0.1:32932 Accepted
+[WebServer] [Tue Oct 27 12:10:12 2026] 127.0.0.1:32932 [200]: GET /assets/index-i2bk7Jhy.css
+[WebServer] [Tue Oct 27 12:10:12 2026] 127.0.0.1:32924 [200]: GET /assets/index-DA433pcF.js
+[WebServer] [Tue Oct 27 12:10:12 2026] 127.0.0.1:32932 Closing
+[WebServer] [Tue Oct 27 12:10:12 2026] 127.0.0.1:32924 Closing
+[WebServer] [Tue Oct 27 12:10:12 2026] 127.0.0.1:32948 Accepted
+[WebServer] [Tue Oct 27 12:10:12 2026] 127.0.0.1:32948 [200]: GET /api/session.php
+[WebServer] [Tue Oct 27 12:10:12 2026] 127.0.0.1:32948 Closing
+[WebServer] [Tue Oct 27 12:10:12 2026] 127.0.0.1:32960 Accepted
+[WebServer] [Tue Oct 27 12:10:12 2026] 127.0.0.1:32962 Accepted
+[WebServer] [Tue Oct 27 12:10:12 2026] 127.0.0.1:32960 [200]: GET /assets/app-BrRuWZIJ.css
+[WebServer] [Tue Oct 27 12:10:12 2026] 127.0.0.1:32960 Closing
+[WebServer] [Tue Oct 27 12:10:12 2026] 127.0.0.1:32962 [200]: GET /assets/app-8KIsz2Lu.js
+[WebServer] [Tue Oct 27 12:10:12 2026] 127.0.0.1:32962 Closing
+[WebServer] [Tue Oct 27 12:10:12 2026] 127.0.0.1:32978 Accepted
+[WebServer] [Tue Oct 27 12:10:12 2026] 127.0.0.1:32978 [200]: GET /api/github.php?p=%2Frepos%2Fme%2Fnotes
+[WebServer] [Tue Oct 27 12:10:12 2026] 127.0.0.1:32978 Closing
+[WebServer] [Tue Oct 27 12:10:12 2026] 127.0.0.1:32990 Accepted
+[WebServer] [Tue Oct 27 12:10:12 2026] 127.0.0.1:32990 [200]: GET /api/github.php?p=%2Frepos%2Fme%2Fnotes%2Fgit%2Fref%2Fheads%2Fmain
+[WebServer] [Tue Oct 27 12:10:12 2026] 127.0.0.1:32990 Closing
+[WebServer] [Tue Oct 27 12:10:12 2026] 127.0.0.1:33000 Accepted
+[WebServer] [Tue Oct 27 12:10:12 2026] 127.0.0.1:33000 [200]: GET /api/github.php?p=%2Frepos%2Fme%2Fnotes%2Fgit%2Ftrees%2F67cbd6e28b2cfc66969f6c9c4108855d9b87d60c%3Frecursive%3D1
+[WebServer] [Tue Oct 27 12:10:12 2026] 127.0.0.1:33000 Closing
+[WebServer] [Tue Oct 27 12:10:12 2026] 127.0.0.1:33014 Accepted
+[WebServer] [Tue Oct 27 12:10:12 2026] 127.0.0.1:33030 Accepted
+[WebServer] [Tue Oct 27 12:10:12 2026] 127.0.0.1:33042 Accepted
+[WebServer] [Tue Oct 27 12:10:12 2026] 127.0.0.1:33046 Accepted
+[WebServer] [Tue Oct 27 12:10:12 2026] 127.0.0.1:33014 [200]: GET /api/github.php?p=%2Frepos%2Fme%2Fnotes%2Fgit%2Fblobs%2F279bb640f95dde884fd2bf5fcbc50a4a44e17d5c
+[WebServer] [Tue Oct 27 12:10:12 2026] 127.0.0.1:33014 Closing
+[WebServer] [Tue Oct 27 12:10:12 2026] 127.0.0.1:33030 [200]: GET /api/github.php?p=%2Frepos%2Fme%2Fnotes%2Fgit%2Fblobs%2F0d23a1de8a21448e06040135a65606c0016a9a7f
+[WebServer] [Tue Oct 27 12:10:12 2026] 127.0.0.1:33030 Closing
+[WebServer] [Tue Oct 27 12:10:12 2026] 127.0.0.1:33042 [200]: GET /api/github.php?p=%2Frepos%2Fme%2Fnotes%2Fgit%2Fblobs%2Fe40d6f642a375e240b5cfdbd07442414184a9760
+[WebServer] [Tue Oct 27 12:10:12 2026] 127.0.0.1:33042 Closing
+[WebServer] [Tue Oct 27 12:10:12 2026] 127.0.0.1:33046 [200]: GET /api/github.php?p=%2Frepos%2Fme%2Fnotes%2Fgit%2Fblobs%2Fb40af2e5e2d36881bc[WebServer] 9d8dc4325a14ce5bfd4dad
+[WebServer] [Tue Oct 27 12:10:12 2026] 127.0.0.1:33046 Closing
+[WebServer] [Tue Oct 27 12:10:12 2026] 127.0.0.1:33054 Accepted
+[WebServer] [Tue Oct 27 12:10:12 2026] 127.0.0.1:33054 [200]: GET /api/github.php?p=%2Frepos%2Fme%2Fnotes%2Fgit%2Fblobs%2F8db9b03d19bace2ec8a4ef3b722322c98da10fa6
+[WebServer] [Tue Oct 27 12:10:12 2026] 127.0.0.1:33054 Closing
+[WebServer] [Tue Oct 27 12:10:12 2026] 127.0.0.1:33062 Accepted
+[WebServer] [Tue Oct 27 12:10:12 2026] 127.0.0.1:33062 [403]: POST /api/settings.php
+[WebServer] [Tue Oct 27 12:10:12 2026] 127.0.0.1:33062 Closing
+[WebServer] [Tue Oct 27 12:10:12 2026] 127.0.0.1:33068 Accepted
+[WebServer] [Tue Oct 27 12:10:12 2026] 127.0.0.1:33068 [200]: POST /api/settings.php
+[WebServer] [Tue Oct 27 12:10:12 2026] 127.0.0.1:33068 Closing
+  ✓   7 [chromium] › tests/e2e/hosted.spec.js:89:1 › server settings dialog (1.0s)
+  ✓   5 [chromium] › tests/e2e/app.spec.js:100:1 › spreadsheet: edit a cell, totals update, saved as a table (3.7s)
+  ✓   9 [chromium] › tests/e2e/app.spec.js:120:1 › spreadsheet: per-row formulas, sorting and adding rows (3.7s)
+  ✓   8 [webkit] › tests/e2e/app.spec.js:59:1 › loads notes and folders, opens a note with a spreadsheet (6.0s)
+  ✓  10 [chromium] › tests/e2e/app.spec.js:141:1 › insert a spreadsheet from the toolbar (3.5s)
+  ✓  12 [chromium] › tests/e2e/app.spec.js:165:1 › new note in a folder, with tags, then filter by tag (3.8s)
+  ✓  11 [webkit] › tests/e2e/app.spec.js:77:1 › typing saves automatically and keeps the file format (4.4s)
+  ✓  13 [chromium] › tests/e2e/app.spec.js:186:1 › folders: create, drag a note in, rename (1.1s)
+  ✓  14 [webkit] › tests/e2e/app.spec.js:100:1 › spreadsheet: edit a cell, totals update, saved as a table (4.6s)
+  ✓  15 [chromium] › tests/e2e/app.spec.js:204:1 › revision history: view and restore an older version (3.8s)
+  ✓  17 [chromium] › tests/e2e/app.spec.js:225:1 › delete to Trash and restore (1.2s)
+  ✓  18 [chromium] › tests/e2e/app.spec.js:243:1 › manual saving: Save button, and a warning when leaving (4.5s)
+  ✓  16 [webkit] › tests/e2e/app.spec.js:120:1 › spreadsheet: per-row formulas, sorting and adding rows (6.4s)
+  ✓  19 [chromium] › tests/e2e/app.spec.js:271:1 › changes made elsewhere: refresh and conflict (3.7s)
+  ✓  20 [webkit] › tests/e2e/app.spec.js:141:1 › insert a spreadsheet from the toolbar (4.2s)
+  ✓  21 [chromium] › tests/e2e/app.spec.js:289:1 › search, including older versions (3.9s)
+  ✓  23 [chromium] › tests/e2e/app.spec.js:308:1 › looks right on a phone and in dark mode (765ms)
+  ✓  24 [chromium] › tests/e2e/app.spec.js:324:1 › sign-in screen when not set up (262ms)
+  ✓  22 [webkit] › tests/e2e/app.spec.js:165:1 › new note in a folder, with tags, then filter by tag (4.6s)
+  ✓  25 [chromium] › tests/e2e/app.spec.js:331:1 › appearance: light, dark or follow the system, remembered (1.0s)
+  ✓  26 [webkit] › tests/e2e/app.spec.js:186:1 › folders: create, drag a note in, rename (1.7s)
+  ✓  27 [chromium] › tests/e2e/app.spec.js:356:1 › formula bar: edit there, function suggestions and argument hints (4.1s)
+  ✓  28 [webkit] › tests/e2e/app.spec.js:204:1 › revision history: view and restore an older version (4.9s)
+  ✓  30 [webkit] › tests/e2e/app.spec.js:225:1 › delete to Trash and restore (1.9s)
+  ✓  29 [chromium] › tests/e2e/app.spec.js:390:1 › function list and date results (4.4s)
+  ✓  32 [chromium] › tests/e2e/app.spec.js:418:1 › spreadsheet: just the table until used; select it all and delete (4.0s)
+  ✓  31 [webkit] › tests/e2e/app.spec.js:243:1 › manual saving: Save button, and a warning when leaving (5.7s)
+  ✓  33 [chromium] › tests/e2e/app.spec.js:451:1 › formula bar keeps the cell marked, and cells can be clicked into a formula (3.9s)
+  -  35 [webkit] › tests/e2e/hosted.spec.js:30:1 › first-time setup page
+  -  36 [webkit] › tests/e2e/hosted.spec.js:55:1 › edit a note through the server
+  -  37 [webkit] › tests/e2e/hosted.spec.js:65:1 › sign out, then sign in with the sign-in page
+  -  38 [webkit] › tests/e2e/hosted.spec.js:89:1 › server settings dialog
+  ✓  34 [webkit] › tests/e2e/app.spec.js:271:1 › changes made elsewhere: refresh and conflict (4.1s)
+  ✓  39 [webkit] › tests/e2e/app.spec.js:289:1 › search, including older versions (4.8s)
+  -  40 [webkit] › tests/e2e/app.spec.js:308:1 › looks right on a phone and in dark mode
+  ✓  41 [webkit] › tests/e2e/app.spec.js:324:1 › sign-in screen when not set up (971ms)
+  ✓  42 [webkit] › tests/e2e/app.spec.js:331:1 › appearance: light, dark or follow the system, remembered (1.7s)
+  ✓  43 [webkit] › tests/e2e/app.spec.js:356:1 › formula bar: edit there, function suggestions and argument hints (4.6s)
+  ✓  44 [webkit] › tests/e2e/app.spec.js:390:1 › function list and date results (4.8s)
+  ✓  45 [webkit] › tests/e2e/app.spec.js:418:1 › spreadsheet: just the table until used; select it all and delete (4.5s)
+  ✓  46 [webkit] › tests/e2e/app.spec.js:451:1 › formula bar keeps the cell marked, and cells can be clicked into a formula (4.6s)
+
+  5 skipped
+  41 passed (1.4m)
