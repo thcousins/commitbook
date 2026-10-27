@@ -39,10 +39,19 @@ jobs:
           npm run build 2>&1 | tee test-output/build.log
           exit ${PIPESTATUS[0]}
       - name: Install browsers
-        timeout-minutes: 8
-        run: npx playwright install --with-deps chromium webkit > /dev/null
+        id: browsers
+        continue-on-error: true
+        timeout-minutes: 12
+        run: |
+          mkdir -p test-output
+          set -o pipefail
+          echo "== system packages" | tee test-output/install.log
+          timeout 300 npx playwright install-deps chromium webkit 2>&1 | tail -n 40 | tee -a test-output/install.log
+          echo "== browsers" | tee -a test-output/install.log
+          timeout 300 npx playwright install chromium webkit 2>&1 | tail -n 40 | tee -a test-output/install.log
       - name: Browser tests
         id: e2e
+        if: steps.browsers.outcome == 'success'
         continue-on-error: true
         timeout-minutes: 16
         run: |
@@ -55,7 +64,7 @@ jobs:
           cp -r test-output/. /tmp/results/ 2>/dev/null || true
           cp package-lock.json /tmp/results/ 2>/dev/null || true
           mkdir -p /tmp/results/failures
-          echo "${{ github.sha }} ${{ steps.e2e.outcome }}" > /tmp/results/STATUS
+          echo "${{ github.sha }} ${{ steps.e2e.outcome }} (browsers: ${{ steps.browsers.outcome }})" > /tmp/results/STATUS
           cd /tmp/results
           git init -q
           git checkout -q -b ci-results
