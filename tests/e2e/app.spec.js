@@ -42,9 +42,10 @@ test.afterEach(async ({ page }, info) => {
   if (info.status === info.expectedStatus) return;
   const name = `${info.project.name}-${info.title.replace(/[^a-z0-9]+/gi, '-').slice(0, 60)}`;
   fs.mkdirSync('test-output/failures', { recursive: true });
-  try { await page.screenshot({ path: `test-output/failures/${name}.png` }); } catch { /* page gone */ }
+  const within = (p, ms) => Promise.race([p, new Promise((_, rej) => setTimeout(() => rej(new Error('timed out')), ms))]);
+  try { await within(page.screenshot({ path: `test-output/failures/${name}.png`, timeout: 5000 }), 6000); } catch { /* page busy or gone */ }
   let html = '';
-  try { html = await page.locator('#cb-page').innerHTML({ timeout: 2000 }); } catch { /* ignore */ }
+  try { html = await within(page.evaluate(() => document.querySelector('#cb-page')?.innerHTML || ''), 4000); } catch (e) { html = `(couldn't read the page: ${e.message})`; }
   fs.writeFileSync(`test-output/failures/${name}.txt`, `${(page.__problems || []).join('\n')}\n\n---- #cb-page ----\n${html.slice(0, 20000)}`);
 });
 
