@@ -12,7 +12,9 @@ import 'jspreadsheet-ce/dist/jspreadsheet.themes.css';
 import { HyperFormula } from 'hyperformula';
 import { formatValue, FORMATS, isNumericLooking, toNumber } from '../lib/format.js';
 import { sortRows, mapRowRefs } from '../lib/refs.js';
-import { emptySheet } from '../lib/sheetmd.js';
+import { emptySheet, isAutoName } from '../lib/sheetmd.js';
+import { catalogue } from '../lib/functions.js';
+import { FormulaHelper, callAtCaret } from './formula-help.js';
 import { esc } from '../lib/util.js';
 import { icon } from '../ui/icons.js';
 import { ask } from '../ui/dialogs.js';
@@ -29,6 +31,20 @@ const HF_CONFIG = {
   useArrayArithmetic: false,
 };
 
+// One formula helper shared by every spreadsheet, listing the functions the engine supports.
+let helper = null;
+function formulaHelper() {
+  if (!helper) {
+    let names = [];
+    try { names = HyperFormula.getRegisteredFunctionNames('enGB'); } catch { /* use our own list */ }
+    helper = new FormulaHelper(catalogue(names));
+  }
+  return helper;
+}
+
+// Formula results the engine knows are dates or times show as such in "General" format.
+const DATE_KIND = { NUMBER_DATE: 'date', NUMBER_TIME: 'time', NUMBER_DATETIME: 'datetime' };
+
 const colName = i => { let s = ''; i++; while (i) { const m = (i - 1) % 26; s = String.fromCharCode(65 + m) + s; i = Math.floor((i - 1) / 26); } return s; };
 const isFormula = v => typeof v === 'string' && v.trim().startsWith('=');
 const clone = s => JSON.parse(JSON.stringify(s));
@@ -37,7 +53,7 @@ function normalise(data) {
   const s = data && Array.isArray(data.columns) && data.columns.length ? clone(data) : emptySheet();
   const w = Math.max(1, s.columns.length);
   const pad = r => { const x = (r || []).slice(0, w).map(v => (v == null ? '' : String(v))); while (x.length < w) x.push(''); return x; };
-  s.columns = pad(s.columns).map((c, i) => c || `Column ${colName(i)}`);
+  s.columns = pad(s.columns).map((c, i) => (isAutoName(c, i) ? '' : c));
   s.rows = (s.rows && s.rows.length ? s.rows : [[]]).map(pad);
   s.totals = (s.totals || []).map(pad);
   s.widths = Array.from({ length: w }, (_, i) => Number(s.widths?.[i]) || 0);
@@ -64,11 +80,19 @@ export class SheetView {
         <button type="button" class="cb-sbtn cb-sbtn-quiet" data-act="remove" title="Remove this spreadsheet">${icon('trash')}</button>` : ''}
         <span class="cb-sheet-count"></span>
       </div>
-      <div class="cb-fx"><span class="cb-fx-ref"></span><span class="cb-fx-val"></span></div>
+      <div class="cb-fx">
+        <span class="cb-fx-ref"></span>
+        ${editable ? '<button type="button" class="cb-fx-btn" title="Insert a function" aria-label="Insert a function"><i>f</i>x</button>' : ''}
+        <textarea class="cb-fx-input" rows="1" spellcheck="false" autocapitalize="off" autocomplete="off" aria-label="Cell contents" ${editable ? '' : 'readonly'}></textarea>
+      </div>
+      <div class="cb-fx-sig" hidden></div>
       <div class="cb-grid"></div>`;
     this.host = this.dom.querySelector('.cb-grid');
     this.fxRef = this.dom.querySelector('.cb-fx-ref');
-    this.fxVal = this.dom.querySelector('.cb-fx-val');
+    this.fxInput = this.dom.querySelector('.cb-fx-input');
+    this.fxSig = this.dom.querySelector('.cb-fx-sig');
+    this.sel = null;          // { kind: 'cell' | 'total', x, y }
+    this.bindFormulaBar();
     this.dom.querySelector('.cb-sheet-search input').addEventListener('input', e => this.filter(e.target.value));
     this.dom.querySelector('.cb-sheet-bar').addEventListener('click', e => {
       const act = e.target.closest('[data-act]')?.dataset.act;
@@ -94,7 +118,7 @@ export class SheetView {
         data: s.rows.map(r => r.slice()),
         columns: s.columns.map((title, i) => ({
           type: 'text',
-          title,
+          title: title || '',
           width: s.widths[i] || defaultWidth(i),
           align: this.alignFor(i),
           wordWrap: false,
@@ -130,8 +154,7 @@ export class SheetView {
       onpaste: () => this.changed(),
       onundo: () => this.changed({ columns: true }),
       onredo: () => this.changed({ columns: true }),
-      onselection: (ws, x1, y1) => this.showFx(x1, y1),
-      onblur: () => this.showFx(null),
+      onselection: (ws, x1, y1) => { this.sel = { kind: 'cell', x: Number(x1), y: Number(y1) }; this.showFx(); },
       contextMenu: (ws, x, y, e, items, role) => this.menu(x, y, role, items),
     });
     this.ws = this.jss[0];
@@ -149,9 +172,12 @@ export class SheetView {
   read({ columns = false, widths = false } = {}) {
     const s = this.sheet;
     const data = this.ws.getData().map(r => r.map(v => (v == null ? '' : String(v))));
-    const headers = this.ws.getHeaders(true);
-    const w = headers.length;
-    s.columns = headers.map((h, i) => String(h ?? '') || `Column ${colName(i)}`);
+    const w = this.ws.getHeaders(true).length;
+    // Names come from the column settings; the grid shows a letter where there's no name.
+    s.columns = Array.from({ length: w }, (_, i) => {
+      const t = String(this.ws.options.columns?.[i]?.title ?? '');
+      return isAutoName(t, i) ? '' : t;
+    });
     s.rows = data.length ? data : [Array(w).fill('')];
     if (columns || s.totals.some(r => r.length !== w)) {
       // Columns were added or removed: keep totals and formats lined up by position.
@@ -193,6 +219,7 @@ export class SheetView {
     }
     this.renderTotals();
     this.updateCount();
+    if (document.activeElement !== this.fxInput) this.showFx();
   }
 
   /** Data for the formula engine: typed numbers like "£1,234.50" become numbers. */
@@ -214,7 +241,11 @@ export class SheetView {
     if (isFormula(raw)) {
       const v = this.valueAt(x, y);
       if (v && typeof v === 'object') return { text: v.value || '#ERROR', error: true, title: v.message };
-      return { text: formatValue(v, fmt, { isFormula: true }), formula: true };
+      let f = fmt;
+      if (f === 'general' && typeof v === 'number') {
+        try { f = DATE_KIND[this.hf.getCellValueDetailedType({ sheet: 0, col: x, row: y })] || f; } catch { /* keep general */ }
+      }
+      return { text: formatValue(v, f, { isFormula: true }), formula: true };
     }
     return { text: formatValue(raw, fmt) };
   }
@@ -284,7 +315,9 @@ export class SheetView {
     td.appendChild(input);
     input.focus();
     input.select();
-    this.showFx(x, null, raw, `Σ${y + 1}`);
+    this.sel = { kind: 'total', x, y };
+    this.showFx();
+    formulaHelper().watch(input, { onChange: () => this.mirror(input) });
     let done = false;
     const finish = save => {
       if (done) return;
@@ -294,7 +327,7 @@ export class SheetView {
         this.onChange?.(clone(this.sheet));
       }
       this.renderTotals();
-      this.showFx(null);
+      this.showFx();
     };
     input.addEventListener('keydown', ev => {
       ev.stopPropagation();
@@ -304,17 +337,114 @@ export class SheetView {
     input.addEventListener('blur', () => finish(true));
   }
 
-  showFx(x, y, raw, ref) {
-    if (x == null) {
+  // ------------------------------------------------------------ formula bar
+
+  rawAt(sel) {
+    if (!sel) return '';
+    if (sel.kind === 'total') return this.sheet.totals[sel.y]?.[sel.x] ?? '';
+    return this.sheet.rows[sel.y]?.[sel.x] ?? '';
+  }
+
+  bindFormulaBar() {
+    const fx = this.fxInput;
+    const help = formulaHelper();
+    help.watch(fx, { onChange: () => { this.autosize(); this.showSignature(fx); } });
+    let original = '';
+    let cancelled = false;
+    fx.addEventListener('focus', () => {
+      if (!this.sel) {
+        // Nothing selected yet: start at the first cell.
+        this.sel = { kind: 'cell', x: 0, y: 0 };
+        this.showFx();
+      }
+      original = fx.value;
+      cancelled = false;
+    });
+    fx.addEventListener('keydown', e => {
+      e.stopPropagation();
+      if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); this.commitFx(); fx.blur(); }
+      else if (e.key === 'Escape') { e.preventDefault(); cancelled = true; fx.value = original; fx.blur(); }
+      else if (e.key === 'Tab') { e.preventDefault(); this.commitFx(); fx.blur(); }
+    });
+    fx.addEventListener('blur', () => {
+      if (!cancelled) this.commitFx();
+      cancelled = false;
+      this.fxSig.hidden = true;
+    });
+    fx.addEventListener('click', () => this.showSignature(fx));
+    fx.addEventListener('keyup', () => this.showSignature(fx));
+    this.dom.querySelector('.cb-fx-btn')?.addEventListener('click', e => {
+      if (!this.sel) this.sel = { kind: 'cell', x: 0, y: 0 };
+      const keep = this.sel;
+      help.browse(e.currentTarget, f => {
+        this.sel = keep;
+        this.showFx();
+        let v = fx.value;
+        let caret = fx.selectionStart ?? v.length;
+        if (!v.trim().startsWith('=')) { v = '='; caret = 1; }
+        const insert = f.name + '(';
+        fx.focus();
+        fx.value = v.slice(0, caret) + insert + v.slice(caret);
+        const at = caret + insert.length;
+        fx.setSelectionRange(at, at);
+        this.autosize();
+        this.showSignature(fx);
+      });
+    });
+    // Typing straight into a cell: suggest functions there too, and show it in the bar.
+    this.host.addEventListener('focusin', e => {
+      const t = e.target;
+      if (t.matches?.('input, textarea') && t.closest('td')) help.watch(t, { onChange: () => this.mirror(t) });
+    });
+  }
+
+  mirror(el) {
+    this.fxInput.value = el.value;
+    this.autosize();
+    this.showSignature(el);
+  }
+
+  commitFx() {
+    const sel = this.sel;
+    if (!sel || !this.editable) return;
+    const value = this.fxInput.value.replace(/\r?\n/g, ' ');
+    if (value === this.rawAt(sel)) return;
+    if (sel.kind === 'total') {
+      this.sheet.totals[sel.y][sel.x] = value;
+      this.recalc();
+      this.onChange?.(clone(this.sheet));
+    } else {
+      this.ws.setValueFromCoords(sel.x, sel.y, value, true);
+      try { this.ws.updateSelectionFromCoords(sel.x, sel.y, sel.x, sel.y); } catch { /* ignore */ }
+    }
+  }
+
+  showSignature(el) {
+    const f = formulaHelper().describe(callAtCaret(el.value, el.selectionStart ?? el.value.length));
+    if (!f) { this.fxSig.hidden = true; return; }
+    this.fxSig.innerHTML = `<span class="cb-fn-syntax">${esc(f.syntax)}</span>${f.text ? ` <span class="cb-fn-text">${esc(f.text)}</span>` : ''}`;
+    this.fxSig.hidden = false;
+  }
+
+  autosize() {
+    const fx = this.fxInput;
+    fx.style.height = 'auto';
+    fx.style.height = Math.min(160, fx.scrollHeight) + 'px';
+  }
+
+  showFx() {
+    const sel = this.sel;
+    if (!sel) {
       this.fxRef.textContent = '';
-      this.fxVal.innerHTML = this.editable
-        ? '<span class="cb-fx-hint">Click a cell to edit. Start with = for a formula, e.g. =SUM(C:C). Right-click for more options.</span>'
-        : '';
+      this.fxInput.value = '';
+      this.fxInput.placeholder = this.editable ? 'Select a cell, then type here or in the cell. Start with = for a formula.' : '';
+      this.autosize();
       return;
     }
-    const value = raw !== undefined ? raw : this.sheet.rows[y]?.[x] ?? '';
-    this.fxRef.textContent = ref || `${colName(x)}${y + 1}`;
-    this.fxVal.textContent = value;
+    this.fxRef.textContent = sel.kind === 'total' ? `Σ${colName(sel.x)}` : `${colName(sel.x)}${sel.y + 1}`;
+    this.fxInput.placeholder = '';
+    this.fxInput.value = this.rawAt(sel);
+    this.autosize();
   }
 
   updateCount() {
@@ -355,7 +485,8 @@ export class SheetView {
   sortBy(x, dir) {
     this.read();
     const s = this.sheet;
-    const sorted = sortRows(s.rows, x, dir, (row, i) => (isFormula(row[x]) ? this.valueAt(x, i) : row[x]));
+    // Sort by what the cells show: formula results, and typed dates as dates.
+    const sorted = sortRows(s.rows, x, dir, (row, i) => (row[x] === '' ? '' : this.valueAt(x, i)));
     s.rows = sorted;
     this.ws.setData(sorted.map(r => r.slice()));
     this.recalc();
@@ -381,10 +512,14 @@ export class SheetView {
           { title: 'Sort A → Z, 1 → 9', onclick: () => this.sortBy(xi, 1) },
           { title: 'Sort Z → A, 9 → 1', onclick: () => this.sortBy(xi, -1) },
           { type: 'line' },
-          { title: 'Number format', submenu: FORMATS.map(f => ({ title: (this.sheet.formats[xi] || 'general') === f.id ? `✓ ${f.label}` : f.label, onclick: () => this.setFormat(xi, f.id) })) },
-          { title: 'Rename column…', onclick: async () => {
-            const name = await ask({ title: 'Rename column', label: 'Column name', value: this.sheet.columns[xi], ok: 'Rename' });
-            if (name != null) ws.setHeader(xi, name.trim() || `Column ${colName(xi)}`);
+          { title: 'Format', submenu: FORMATS.map(f => ({ title: (this.sheet.formats[xi] || 'general') === f.id ? `✓ ${f.label}` : f.label, onclick: () => this.setFormat(xi, f.id) })) },
+          { title: 'Name column…', onclick: async () => {
+            const name = await ask({ title: `Name column ${colName(xi)}`, label: 'Column name', value: this.sheet.columns[xi], ok: 'Save', help: 'Leave it empty to show the column letter.' });
+            if (name == null) return;
+            this.read();
+            this.sheet.columns[xi] = isAutoName(name, xi) ? '' : name.trim();
+            this.build();
+            this.onChange?.(clone(this.sheet));
           } },
           { title: 'Insert column left', onclick: () => ws.insertColumn(1, xi, true) },
           { title: 'Insert column right', onclick: () => ws.insertColumn(1, xi, false) },

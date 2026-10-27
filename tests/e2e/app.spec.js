@@ -146,9 +146,14 @@ test('insert a spreadsheet from the toolbar', async ({ page }) => {
   await page.keyboard.press('Tab');
   await page.keyboard.type('85');
   await page.keyboard.press('Enter');
-  await expect(sheet.locator('tfoot')).toContainText('85');
+  await expect(sheet.locator('tbody tr').nth(0)).toContainText('85');
+  // New spreadsheets have no column names: the headings are just A, B, C.
+  await expect(sheet.locator('thead td').nth(1)).toHaveText('A');
+  await expect(sheet.locator('thead td').nth(3)).toHaveText('C');
   await waitSaved(page);
-  expect(gh.files()['gift-ideas.md']).toMatch(/\| Boots\s+\| 85\s+\|/);
+  const text = gh.files()['gift-ideas.md'];
+  expect(text).toMatch(/<!-- commitbook:sheet -->\n\|\s+\|\s+\|\s+\|\n/);
+  expect(text).toMatch(/\| Boots\s+\| 85\s+\|/);
   expect(problems).toEqual([]);
 });
 
@@ -336,5 +341,67 @@ test('appearance: light, dark or follow the system, remembered', async ({ page }
   // "Light" wins over a dark device.
   await page.locator('[data-theme-choice="light"]').click();
   expect(await bg()).toBe(light);
+  expect(problems).toEqual([]);
+});
+
+test('formula bar: edit there, function suggestions and argument hints', async ({ page }, info) => {
+  const { gh, problems } = await setup(page);
+  await page.locator('.cb-folder-row', { hasText: 'Car' }).click();
+  await openNote(page, 'MOT and tyres');
+  const sheet = page.locator('.cb-sheet').first();
+  await sheet.locator('tbody tr').nth(0).locator('td').nth(3).click();       // C1, "118"
+  const fx = sheet.locator('.cb-fx-input');
+  await expect(fx).toHaveValue('118');
+  await expect(sheet.locator('.cb-fx-ref')).toHaveText('C1');
+  await fx.click();
+  await page.keyboard.press('ControlOrMeta+a');
+  await page.keyboard.type('=rou');
+  const pop = page.locator('.cb-fn-pop');
+  await expect(pop).toBeVisible();
+  await expect(pop.locator('.cb-fn-item').first()).toContainText('ROUND(number, digits)');
+  await shot(page, '14-formula-suggest', info);
+  await page.keyboard.press('Enter');
+  await expect(fx).toHaveValue('=ROUND(');
+  await expect(sheet.locator('.cb-fx-sig')).toContainText('ROUND(number, digits)');
+  await page.keyboard.type('120*1.155, 0)');
+  await page.keyboard.press('Enter');
+  await expect(sheet.locator('tbody tr').nth(0).locator('td').nth(3)).toHaveText('139');
+  await expect(sheet.locator('tbody tr').nth(0).locator('td').nth(4)).toContainText('278');   // =C1*2 follows
+  await waitSaved(page);
+  expect(gh.files()['Car/mot-and-tyres.md']).toContain('=ROUND(120*1.155, 0)');
+  // Escape in the bar leaves the cell as it was.
+  await fx.click();
+  await page.keyboard.press('ControlOrMeta+a');
+  await page.keyboard.type('nonsense');
+  await page.keyboard.press('Escape');
+  await expect(sheet.locator('tbody tr').nth(0).locator('td').nth(3)).toHaveText('139');
+  expect(problems).toEqual([]);
+});
+
+test('function list and date results', async ({ page }, info) => {
+  const { gh, problems } = await setup(page);
+  await openNote(page, 'Gift ideas');
+  await page.locator('#cb-editor .tiptap').click();
+  await page.keyboard.press('ControlOrMeta+End');
+  await page.locator('.cb-tool[data-cmd="sheet"]').click();
+  const sheet = page.locator('.cb-sheet');
+  await sheet.locator('tbody tr').nth(0).locator('td').nth(1).click();
+  await sheet.locator('.cb-fx-btn').click();
+  const browse = page.locator('.cb-fn-browse');
+  await expect(browse).toBeVisible();
+  await expect(browse.locator('.cb-fn-group').first()).toHaveText('Maths');
+  await browse.locator('input').fill('days between');
+  await expect(browse.locator('.cb-fn-item').first()).toContainText('DAYS(');
+  await shot(page, '15-function-list', info);
+  await browse.locator('input').fill('DATE');
+  await browse.locator('.cb-fn-item', { hasText: 'DATE(year, month, day)' }).click();
+  const fx = sheet.locator('.cb-fx-input');
+  await expect(fx).toHaveValue('=DATE(');
+  await page.keyboard.type('2026, 11, 3)');
+  await page.keyboard.press('Enter');
+  // A formula that makes a date shows as a date.
+  await expect(sheet.locator('tbody tr').nth(0).locator('td').nth(1)).toHaveText('03/11/2026');
+  await waitSaved(page);
+  expect(gh.files()['gift-ideas.md']).toContain('=DATE(2026, 11, 3)');
   expect(problems).toEqual([]);
 });

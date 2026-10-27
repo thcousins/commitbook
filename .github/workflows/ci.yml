@@ -38,11 +38,14 @@ jobs:
         run: |
           npm run build 2>&1 | tee test-output/build.log
           exit ${PIPESTATUS[0]}
+      - name: Install browsers
+        timeout-minutes: 8
+        run: npx playwright install --with-deps chromium webkit > /dev/null
       - name: Browser tests
         id: e2e
         continue-on-error: true
+        timeout-minutes: 16
         run: |
-          npx playwright install --with-deps chromium webkit > /dev/null
           PW_PROJECTS="${{ vars.PW_PROJECTS || 'chromium,webkit' }}" npx playwright test 2>&1 | tee test-output/e2e.log
           exit ${PIPESTATUS[0]}
       - name: Publish results to the ci-results branch

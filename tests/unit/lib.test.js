@@ -100,3 +100,47 @@ test('previews leave out spreadsheet contents', async () => {
   const { previewText } = await import('../../src/lib/util.js');
   assert.equal(previewText('Intro\n\n<!-- commitbook:sheet -->\n| A | B |\n| --- | --- |\n| 1 | 2 |\n\nAfter'), 'Intro After');
 });
+
+test('dates and times', async () => {
+  const { formatValue, parseDateText, dateToSerial } = await import('../../src/lib/format.js');
+  const serial = dateToSerial(2026, 10, 27);
+  assert.equal(serial, 46322);                       // same as Excel / Google Sheets
+  assert.equal(parseDateText('27/10/2026'), serial);
+  assert.equal(parseDateText('27/10/26'), serial);
+  assert.equal(parseDateText('2026-10-27'), serial);
+  assert.equal(parseDateText('14:30'), 14.5 / 24);
+  assert.equal(parseDateText('31/02/2026') !== null, true); // rolls over like spreadsheets do
+  assert.equal(parseDateText('hello'), null);
+  assert.equal(parseDateText('13/13/2026'), null);
+  assert.equal(formatValue(serial, 'date'), '27/10/2026');
+  assert.equal(formatValue('2026-10-27', 'date'), '27/10/2026');
+  assert.equal(formatValue(serial, 'datelong'), '27 Oct 2026');
+  assert.equal(formatValue(serial, 'weekday'), 'Tue 27 Oct 2026');
+  assert.equal(formatValue(serial + 0.5, 'datetime'), '27/10/2026 12:00');
+  assert.equal(formatValue(0.6041666, 'time'), '14:30');
+  assert.equal(formatValue('not a date', 'date'), 'not a date');
+});
+
+test('blank and automatic column names', async () => {
+  const { isAutoName, emptySheet, writeSheet, readSheet } = await import('../../src/lib/sheetmd.js');
+  assert.ok(isAutoName('', 0) && isAutoName('B', 1) && isAutoName('Column C', 2));
+  assert.ok(!isAutoName('B', 0) && !isAutoName('Cost', 1));
+  const md = writeSheet(emptySheet());
+  const back = readSheet(md).sheet;
+  assert.deepEqual(back.columns, ['', '', '']);
+  assert.equal(back.rows.length, 5);
+  assert.equal(back.totals.length, 0);
+});
+
+test('formula helper: functions and the word at the caret', async () => {
+  const { catalogue, searchFunctions, functionAtCaret } = await import('../../src/lib/functions.js');
+  const list = catalogue(['SUM', 'SUMIF', 'SUMIFS', 'SUMSQ', 'BESSELJ', 'HF.ADD', 'VLOOKUP']);
+  assert.deepEqual(list.map(f => f.name).sort(), ['BESSELJ', 'SUM', 'SUMIF', 'SUMIFS', 'SUMSQ', 'VLOOKUP']);
+  assert.equal(searchFunctions(list, 'sum')[0].name, 'SUM');
+  assert.equal(searchFunctions(list, 'look')[0].name, 'VLOOKUP');
+  assert.deepEqual(functionAtCaret('=su', 3), { start: 1, end: 3, prefix: 'su' });
+  assert.deepEqual(functionAtCaret('=A1+rou', 7), { start: 4, end: 7, prefix: 'rou' });
+  assert.equal(functionAtCaret('=B12', 4), null);          // a cell, not a function
+  assert.equal(functionAtCaret('="su', 4), null);          // inside quotes
+  assert.equal(functionAtCaret('sum', 3), null);           // not a formula
+});

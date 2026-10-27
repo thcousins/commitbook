@@ -104,12 +104,28 @@ export function writeSheet(sheet) {
   ].join('\n');
 }
 
+/** A new spreadsheet: three unnamed columns (shown as A, B, C) and five empty rows. */
 export function emptySheet() {
   return {
-    columns: ['Item', 'Amount'],
-    rows: [['', ''], ['', ''], ['', '']],
-    totals: [['Total', '=SUM(B:B)']],
+    columns: ['', '', ''],
+    rows: Array.from({ length: 5 }, () => ['', '', '']),
+    totals: [],
     widths: [],
     formats: {},
   };
+}
+
+/**
+ * Column names are optional. An empty name shows as the column letter. Names that are
+ * just the letter, or the old automatic "Column B", count as no name.
+ */
+export function columnLetter(i) {
+  let s = '';
+  i++;
+  while (i) { const m = (i - 1) % 26; s = String.fromCharCode(65 + m) + s; i = Math.floor((i - 1) / 26); }
+  return s;
+}
+export function isAutoName(name, i) {
+  const n = String(name ?? '').trim();
+  return n === '' || n === columnLetter(i) || n === `Column ${columnLetter(i)}`;
 }
