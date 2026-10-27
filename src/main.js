@@ -19,12 +19,15 @@ const SETUP_HELP = `
     <summary>How to make the GitHub access key</summary>
     <ol>
       <li><b>Make a private repository</b> for your notes on GitHub, for example <code>notes</code>. It can be empty; Commitbook sets it up.</li>
-      <li>Open <a href="https://github.com/settings/personal-access-tokens/new" target="_blank" rel="noopener">GitHub → Fine-grained tokens → Generate new token</a>.
+      <li><b>Find the fine-grained tokens page:</b> on GitHub, click your <b>profile picture</b> (top right) → <b>Settings</b> → <b>Developer settings</b> (at the bottom of the left-hand menu) → <b>Personal access tokens</b> → <b>Fine-grained tokens</b> → <b>Generate new token</b>. Or go straight there: <a href="https://github.com/settings/personal-access-tokens/new" target="_blank" rel="noopener">github.com/settings/personal-access-tokens/new</a>.</li>
+      <li><b>Fill in the form:</b>
         <ul>
-          <li>Name it <i>Commitbook</i> and choose an expiry date.</li>
-          <li>Under <b>Repository access</b>, choose <i>Only select repositories</i> and pick your notes repository.</li>
-          <li>Under <b>Permissions → Repository permissions</b>, set <b>Contents</b> to <i>Read and write</i>.</li>
-          <li>Click <b>Generate token</b> and copy it.</li>
+          <li><b>Token name:</b> <i>Commitbook</i>. <b>Expiration:</b> choose a date (and put a reminder in your calendar to renew it).</li>
+          <li><b>Resource owner:</b> your own account.</li>
+          <li><b>Repository access:</b> choose <i>Only select repositories</i> and pick your notes repository.</li>
+          <li><b>Permissions:</b> under <i>Repository permissions</i>, set <b>Contents</b> to <i>Read and write</i>. (If you see an <i>Add permissions</i> button instead, click it, choose <i>Contents</i>, then set it to <i>Read and write</i>.) Leave everything else as it is.</li>
+        </ul></li>
+      <li>Click <b>Generate token</b> and copy it straight away. GitHub only shows it once; if you lose it, make a new one.
         </ul></li>
     </ol>
   </details>`;

@@ -1,7 +1,9 @@
 # Working on Commitbook (instructions for Claude)
 
-Commitbook is a static web app (Vite, vanilla JS, no framework) that stores notes as Markdown
-files in a user's GitHub repository through the REST API. There is no backend.
+Commitbook is a web app (Vite, vanilla JS, no framework) that stores notes as Markdown files in
+a user's GitHub repository through the REST API. It runs either in the browser only (static
+hosting; the access key is kept in the browser) or hosted on PHP hosting, where a small server
+side in `public/api/` keeps the access key and provides the sign-in page.
 
 ## Ground rules
 
@@ -9,7 +11,8 @@ files in a user's GitHub repository through the REST API. There is no backend.
   keep existing files loading and round-tripping unchanged. Add a unit test for it.
 - The data format is a public contract: `docs/data-format.md` and the `DATA_CLAUDE` text in
   `src/templates.js` (written into new notes repositories) must stay in sync with the code.
-- No secrets in this repository. Tokens live only in the user's browser.
+- No secrets in this repository. Access keys live in the user's browser (browser-only mode) or
+  in the server's settings file outside the web folder (hosted mode), never in the code.
 - British English in the interface and docs. Write interface text from the user's side
   (“Revision history”, not “commits list”).
 
@@ -34,8 +37,10 @@ files in a user's GitHub repository through the REST API. There is no backend.
 
 ## Testing
 
-- `npm run test:unit` runs in plain Node (no installs needed) and covers the libraries and the
-  store against `tests/support/fake-github.js`.
+- `npm run test:unit` runs in plain Node (no installs needed) and covers the libraries, the
+  store against `tests/support/fake-github.js`, and the PHP server side (needs `php`).
+- The GitHub access-key steps appear in `src/main.js`, `README.md` and `docs/install.md`;
+  keep the three the same.
 - The `Test` workflow builds the app and runs the Playwright tests in Chromium and WebKit
   against the same fake GitHub. It force-pushes screenshots (`shots/`), logs and failure
   images to the `ci-results` branch, so you can review them with

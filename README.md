@@ -35,10 +35,23 @@ switches mode by itself.
 You need a GitHub account.
 
 1. **Create a private repository** for your notes, e.g. `notes`. It can be empty.
-2. **Create a fine-grained access token** at
-   [GitHub → Settings → Developer settings → Fine-grained tokens](https://github.com/settings/personal-access-tokens/new):
-   - Repository access: **Only select repositories** → your notes repository.
-   - Permissions → Repository permissions → **Contents: Read and write**.
+2. **Create a fine-grained access token:**
+
+   1. **Find the fine-grained tokens page.** On GitHub, click your **profile picture** (top right)
+      → **Settings** → **Developer settings** (at the bottom of the left-hand menu)
+      → **Personal access tokens** → **Fine-grained tokens** → **Generate new token**.
+      Or go straight there: [github.com/settings/personal-access-tokens/new](https://github.com/settings/personal-access-tokens/new).
+   2. **Fill in the form:**
+      - **Token name:** *Commitbook*. **Expiration:** choose a date, and put a reminder in your
+        calendar to renew it.
+      - **Resource owner:** your own account.
+      - **Repository access:** *Only select repositories* → your notes repository.
+      - **Permissions:** under *Repository permissions*, set **Contents** to *Read and write*.
+        (If you see an *Add permissions* button instead, click it, choose *Contents*, then set it
+        to *Read and write*.) Leave everything else as it is.
+   3. Click **Generate token** and **copy it straight away**. GitHub only shows it once; if you lose
+      it, just make a new one.
+
 3. **Open Commitbook** and enter `your-name/notes` and the token. Do this once on each device.
 
 The token is stored only in that browser's local storage and is sent only to `api.github.com`.

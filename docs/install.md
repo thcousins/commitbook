@@ -31,11 +31,20 @@ to stay signed in for 90 days on that device.
 
 ## Make the access key
 
-1. Open [GitHub → Settings → Developer settings → Fine-grained tokens → Generate new token](https://github.com/settings/personal-access-tokens/new).
-2. Name it *Commitbook* and choose an expiry date (put a reminder in your calendar to renew it).
-3. **Repository access:** *Only select repositories* → your notes repository.
-4. **Permissions → Repository permissions → Contents:** *Read and write*.
-5. Click **Generate token** and copy it.
+1. **Find the fine-grained tokens page.** On GitHub, click your **profile picture** (top right)
+   → **Settings** → **Developer settings** (at the bottom of the left-hand menu)
+   → **Personal access tokens** → **Fine-grained tokens** → **Generate new token**.
+   Or go straight there: [github.com/settings/personal-access-tokens/new](https://github.com/settings/personal-access-tokens/new).
+2. **Fill in the form:**
+   - **Token name:** *Commitbook*. **Expiration:** choose a date, and put a reminder in your
+     calendar to renew it.
+   - **Resource owner:** your own account.
+   - **Repository access:** *Only select repositories* → your notes repository.
+   - **Permissions:** under *Repository permissions*, set **Contents** to *Read and write*.
+     (If you see an *Add permissions* button instead, click it, choose *Contents*, then set it
+     to *Read and write*.) Leave everything else as it is.
+3. Click **Generate token** and **copy it straight away**. GitHub only shows it once; if you lose
+   it, just make a new one.
 
 When it expires, make a new one and enter it in Commitbook under
 *⋯ → Sign-in and GitHub settings*.
