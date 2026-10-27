@@ -61,6 +61,34 @@ the app or revoke the token on GitHub.
 The first time you open an empty repository, Commitbook adds a `README.md`, a `CLAUDE.md`
 (instructions for Claude) and `.commitbook/tags.json`.
 
+## Using Commitbook with Claude
+
+Because notes are plain files in GitHub, Claude can add to, find, tidy, merge and split them
+for you: say *"add this to my notebook"* and it appears in the app. Two things set this up.
+
+**1. Give Claude access to your notes repository.** Claude reaches GitHub through the Claude
+GitHub app. On GitHub, click your **profile picture** → **Settings** → **Applications** →
+**Installed GitHub Apps** → **Claude** → **Configure**. Under **Repository access**, add your
+notes repository and save. (If Claude isn't listed, connect GitHub from Claude first.) This
+works in Claude sessions that can work with GitHub repositories, such as Claude Code.
+
+**2. Add the Commitbook skill to Claude,** so it knows where your notebook is in any
+conversation. The skill is in
+[`docs/claude-skill/commitbook-notes/SKILL.md`](docs/claude-skill/commitbook-notes/SKILL.md).
+Either:
+
+- **Ask Claude to set it up:** paste the file into a chat and say *"Make this a skill for me.
+  My notes repository is `your-name/notes`."* Claude offers it as a skill you can save. Or:
+- **Upload it yourself:** download the `commitbook-notes` folder, edit `SKILL.md` and replace
+  `OWNER/REPO` with your notes repository (e.g. `your-name/notes`), then zip the folder (keep
+  the folder name `commitbook-notes`). In Claude, open **Settings → Capabilities**, make sure
+  *Code execution and file creation* is on, and under **Skills** click **Upload skill**.
+
+You don't need to explain the note format to Claude: Commitbook writes a `CLAUDE.md` into your
+notes repository when it sets it up, and the skill tells Claude to read it first. Claude saves
+straight to `main`; the app picks up the change when you next switch to it. If you're editing
+the same note at the time, the app asks what to do rather than overwriting either version.
+
 ## How notes are stored
 
 See [docs/data-format.md](docs/data-format.md). In short:

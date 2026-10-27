@@ -41,6 +41,8 @@ side in `public/api/` keeps the access key and provides the sign-in page.
   store against `tests/support/fake-github.js`, and the PHP server side (needs `php`).
 - The GitHub access-key steps appear in `src/main.js`, `README.md` and `docs/install.md`;
   keep the three the same.
+- The Claude skill for users (`docs/claude-skill/commitbook-notes/SKILL.md`) summarises the data
+  format; keep it in step with `docs/data-format.md` and keep the `OWNER/REPO` placeholder.
 - The `Test` workflow builds the app and runs the Playwright tests in Chromium and WebKit
   against the same fake GitHub. It force-pushes screenshots (`shots/`), logs and failure
   images to the `ci-results` branch, so you can review them with
