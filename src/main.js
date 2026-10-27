@@ -3,6 +3,9 @@ import { local } from './lib/cache.js';
 import { esc } from './lib/util.js';
 import { icon } from './ui/icons.js';
 import { GitHubRepo } from './github.js';
+import { applyTheme } from './lib/theme.js';
+
+applyTheme();
 
 // Commitbook runs in one of two ways:
 //  * Hosted: on a web server with PHP (e.g. cPanel). The server keeps the GitHub

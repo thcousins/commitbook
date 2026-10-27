@@ -7,6 +7,7 @@ import { local } from './lib/cache.js';
 import { esc, friendlyDate, longDate, debounce, dirname, basename, plainText, nowIso } from './lib/util.js';
 import { icon } from './ui/icons.js';
 import { ask, confirmBox, choose, pickFolder, toast } from './ui/dialogs.js';
+import { getTheme, setTheme } from './lib/theme.js';
 
 const $ = (sel, root = document) => root.querySelector(sel);
 const $$ = (sel, root = document) => [...root.querySelectorAll(sel)];
@@ -1190,7 +1191,12 @@ class App {
   // ---------------------------------------------------------------- menus
 
   mainMenu(anchor) {
+    const theme = getTheme();
+    const seg = (id, label, ic) => `<button type="button" data-theme-choice="${id}" aria-pressed="${theme === id}">${icon(ic)}${label}</button>`;
     this.popover(anchor, `
+      <div class="cb-pop-head">Appearance</div>
+      <div class="cb-seg" role="group" aria-label="Appearance">${seg('light', 'Light', 'sun')}${seg('dark', 'Dark', 'moon')}${seg('system', 'System', 'monitor')}</div>
+      <div class="cb-pop-sep"></div>
       <button type="button" class="cb-pop-item" data-act="folder">${icon('folderPlus')}New folder</button>
       <button type="button" class="cb-pop-item" data-act="tags">${icon('tag')}Manage tags</button>
       <button type="button" class="cb-pop-item" data-act="trash">${icon('trash')}Trash</button>
@@ -1200,6 +1206,12 @@ class App {
       ${this.hosted ? `<button type="button" class="cb-pop-item" data-act="server">${icon('settings')}Sign-in and GitHub settings</button>` : ''}
       <button type="button" class="cb-pop-item" data-act="signout">${icon('logout')}Sign out${this.hosted && this.settings.user ? ` (${esc(this.settings.user)})` : ' on this device'}</button>`, pop => {
       pop.addEventListener('click', async e => {
+        const choice = e.target.closest('[data-theme-choice]');
+        if (choice) {
+          setTheme(choice.dataset.themeChoice);
+          pop.querySelectorAll('[data-theme-choice]').forEach(b => b.setAttribute('aria-pressed', String(b === choice)));
+          return;
+        }
         const act = e.target.closest('[data-act]')?.dataset.act;
         if (!act) return;
         this.closePopover();

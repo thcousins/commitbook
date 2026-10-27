@@ -1,6 +1,6 @@
 {
   "name": "commitbook",
-  "version": "0.2.1",
+  "version": "0.3.0",
   "description": "A notebook app that keeps every note as a Markdown file in your own GitHub repo, with inline spreadsheets, tags, folders and full revision history.",
   "license": "MIT",
   "private": true,

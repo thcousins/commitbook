@@ -313,3 +313,28 @@ test('sign-in screen when not set up', async ({ page }, info) => {
   await expect(page.locator('#cb-signin')).toBeVisible();
   await shot(page, '12-signin', info);
 });
+
+test('appearance: light, dark or follow the system, remembered', async ({ page }, info) => {
+  const { problems } = await setup(page, { colorScheme: 'light' });
+  const bg = () => page.evaluate(() => getComputedStyle(document.body).backgroundColor);
+  const light = await bg();
+  await page.locator('#cb-menu').click();
+  await page.locator('[data-theme-choice="dark"]').click();
+  await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark');
+  expect(await bg()).not.toBe(light);
+  await shot(page, '13-menu-dark', info);
+  // Remembered after a reload, before the app has even started.
+  await page.reload();
+  await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark');
+  // "System" follows the device again.
+  await page.locator('#cb-menu').click();
+  await page.locator('[data-theme-choice="system"]').click();
+  await expect(page.locator('html')).not.toHaveAttribute('data-theme', /./);
+  expect(await bg()).toBe(light);
+  await page.emulateMedia({ colorScheme: 'dark' });
+  expect(await bg()).not.toBe(light);
+  // "Light" wins over a dark device.
+  await page.locator('[data-theme-choice="light"]').click();
+  expect(await bg()).toBe(light);
+  expect(problems).toEqual([]);
+});
