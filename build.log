@@ -1,0 +1,24 @@
+
+> commitbook@0.5.1 build
+> vite build
+
+[36mvite v8.3.3 [32mbuilding client environment for production...[36m[39m
+transforming...
+<script src="./theme-init.js"> in "/index.html" can't be bundled without type="module" attribute
+✓ 325 modules transformed.
+rendering chunks...
+computing gzip size...
+dist/index.html                         1.27 kB │ gzip:   0.58 kB
+dist/assets/index-Osq5F6ak.css         34.93 kB │ gzip:   7.41 kB
+dist/assets/editor-BrRuWZIJ.css        69.08 kB │ gzip:  14.23 kB
+dist/assets/share-view-CJ7q2esy.js      1.70 kB │ gzip:   0.92 kB │ map:     4.08 kB
+dist/assets/index-D9n1C7wb.js          27.07 kB │ gzip:  10.15 kB │ map:    55.44 kB
+dist/assets/app-BuycCjQV.js            85.27 kB │ gzip:  24.80 kB │ map:   200.46 kB
+dist/assets/editor-p26VJbHD.js      1,906.97 kB │ gzip: 471.83 kB │ map: 6,440.52 kB
+
+[33m[33m[EVAL] [0mUse of direct `eval` function is strongly discouraged as it poses security risks and may cause issues with minification.
+ - Use of direct `eval` here. in node_modules/jspreadsheet-ce/dist/index.js at 19144..19148
+ [38;5;240m │[0m 
+ [38;5;240m │[0m [38;5;115mHelp[0m: Consider using indirect eval. For more information, check the documentation: https://rolldown.rs/guide/troubleshooting#avoiding-direct-eval
+[39m
+[32m✓ built in 691ms[39m
