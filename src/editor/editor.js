@@ -2,7 +2,8 @@
 
 import { Editor } from '@tiptap/core';
 import StarterKit from '@tiptap/starter-kit';
-import { TaskList, TaskItem } from '@tiptap/extension-list';
+import { TaskList } from '@tiptap/extension-list';
+import { FixedListItem, FixedTaskItem } from './list-markdown.js';
 import { Placeholder } from '@tiptap/extensions';
 import { Markdown } from '@tiptap/markdown';
 import { Sheet } from './sheet-node.js';
@@ -20,9 +21,11 @@ export function createEditor({ element, markdown = '', editable = true, onChange
         // in a new tab, and links to a heading (#…) scroll on the same page (heading-anchors.js).
         link: { openOnClick: false, autolink: true, linkOnPaste: true, defaultProtocol: 'https' },
         codeBlock: { HTMLAttributes: { class: 'cb-code' } },
+        listItem: false,           // replaced below: writes nested lists with the right indentation
       }),
+      FixedListItem,
       TaskList,
-      TaskItem.configure({ nested: true }),
+      FixedTaskItem.configure({ nested: true }),
       Placeholder.configure({ placeholder: 'Start writing… Type # for a heading, - for a list, [ ] for a checklist.' }),
       Markdown.configure({ markedOptions: { gfm: true } }),
       Sheet,

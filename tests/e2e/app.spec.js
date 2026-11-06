@@ -539,20 +539,10 @@ test('column widths: drag wider or narrower, fit to contents, hover for full tex
     await page.mouse.up();
     return trace;
   };
-  // Record what happens during the drag (for diagnosing browser differences).
-  await page.evaluate(() => {
-    window.__ev = [];
-    const log = e => window.__ev.push(`${e.type}:${e.buttons ?? ''}:${(e.target.tagName || '').toLowerCase()}${e.target.dataset?.x ?? ''}${e.target.classList?.contains('resizing') ? '*' : ''}`);
-    for (const t of ['mousedown', 'mouseup', 'mouseover', 'dragstart', 'pointercancel', 'blur', 'focusout', 'click', 'scroll', 'selectstart']) document.addEventListener(t, log, true);
-    let n = 0;
-    document.addEventListener('mousemove', e => { if (n++ < 12) log(e); }, true);
-  });
   // Straight to the edge of a sheet that isn't active yet, slowly.
   const start = await width();
   let trace = await drag(240, 40, 25);
   info.annotations.push({ type: 'slow drag', description: trace.join(',') });
-  info.annotations.push({ type: 'events', description: (await page.evaluate(() => window.__ev)).join(' ') });
-  info.annotations.push({ type: 'header classes', description: await sheet.locator('thead').innerHTML() });
   expect(await width()).toBeGreaterThanOrEqual(start + 230);
   // Quickly.
   const mid = await width();
@@ -575,5 +565,19 @@ test('column widths: drag wider or narrower, fit to contents, hover for full tex
   await expect(cell).toHaveAttribute('title', 'Topps Tiles');
   await waitSaved(page);
   expect(gh.files()['House/kitchen-renovation.md']).toMatch(/"widths":\[/);
+  expect(problems).toEqual([]);
+});
+
+test('bullets under a numbered step save at the right depth', async ({ page }) => {
+  const body = '1. Monday\n   - Pack bag\n   - Check tyres\n   - Leave by 8\n2. Tuesday\n   - Office\n     - Bring laptop\n';
+  const text = `---\ntitle: "Plan"\ncreated: 2026-11-01T09:00:00Z\nupdated: 2026-11-01T09:00:00Z\n---\n\n${body}`;
+  const { gh, problems } = await setup(page, { files: { ...SEED, 'plan.md': text } });
+  await openNote(page, 'Plan');
+  // Three bullets at the same level under Monday, and one nested under "Office".
+  await expect(page.locator('#cb-editor ol > li').first().locator(':scope > ul > li')).toHaveCount(3);
+  await expect(page.locator('#cb-editor ol > li').nth(1).locator('ul ul > li')).toHaveCount(1);
+  await page.locator('#cb-title').fill('Plan for the week');           // make a change so it saves
+  await waitSaved(page);
+  expect(gh.files()['plan.md']).toContain(body.trim());
   expect(problems).toEqual([]);
 });

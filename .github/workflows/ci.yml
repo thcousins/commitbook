@@ -41,12 +41,21 @@ jobs:
       - name: Install browsers
         id: browsers
         continue-on-error: true
-        timeout-minutes: 12
+        timeout-minutes: 14
         run: |
           mkdir -p test-output
           set -o pipefail
+          # A fresh machine's automatic updates can hold the package lock; stop them and wait for the lock.
+          sudo systemctl stop unattended-upgrades apt-daily.service apt-daily-upgrade.service 2>/dev/null || true
+          echo 'DPkg::Lock::Timeout "180";' | sudo tee /etc/apt/apt.conf.d/99-lock-timeout > /dev/null
           echo "== system packages" | tee test-output/install.log
-          timeout 300 npx playwright install-deps chromium webkit 2>&1 | tail -n 40 | tee -a test-output/install.log
+          ok=0
+          for attempt in 1 2 3; do
+            if timeout 200 npx playwright install-deps chromium webkit > /tmp/deps.log 2>&1; then ok=1; break; fi
+            echo "attempt $attempt failed:" | tee -a test-output/install.log
+            tail -n 15 /tmp/deps.log | tee -a test-output/install.log
+          done
+          [ "$ok" = 1 ] || exit 1
           echo "== browsers" | tee -a test-output/install.log
           timeout 300 npx playwright install chromium webkit 2>&1 | tail -n 40 | tee -a test-output/install.log
       - name: Browser tests
