@@ -51,6 +51,12 @@ jobs:
           echo "== system packages" | tee test-output/install.log
           ok=0
           for attempt in 1 2 3; do
+            if [ "$attempt" -gt 1 ]; then
+              # Something else still holds the lock: stop it and tidy up before trying again.
+              sudo pkill -9 -f 'apt-get|apt.systemd.daily|unattended-upgr' 2>/dev/null || true
+              sleep 2
+              sudo dpkg --configure -a > /dev/null 2>&1 || true
+            fi
             if timeout 200 npx playwright install-deps chromium webkit > /tmp/deps.log 2>&1; then ok=1; break; fi
             echo "attempt $attempt failed:" | tee -a test-output/install.log
             tail -n 15 /tmp/deps.log | tee -a test-output/install.log
