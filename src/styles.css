@@ -533,3 +533,7 @@ code { font-family: var(--mono); font-size: 0.88em; }
 .cb-seg.cb-mode button { flex: none; height: 24px; padding: 0 10px; font-size: 12.5px; }
 .cb-share-new .cb-field .cb-seg.cb-mode { justify-self: start; }
 .cb-share-title .ic { width: 15px; height: 15px; vertical-align: -2px; margin-right: 6px; color: var(--muted); }
+
+/* Full contents of a spreadsheet cell, on hover */
+.cb-celltip { position: fixed; z-index: 1000; max-width: min(460px, calc(100vw - 16px)); padding: 7px 11px; border-radius: 8px; background: var(--fg); color: var(--bg); font-size: 15px; line-height: 1.4; white-space: pre-wrap; overflow-wrap: anywhere; box-shadow: 0 4px 14px rgb(0 0 0 / 0.18); pointer-events: none; }
+.cb-celltip[hidden] { display: none; }

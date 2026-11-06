@@ -562,7 +562,16 @@ test('column widths: drag wider or narrower, fit to contents, hover for full tex
   await drag(-200, 10, 0);                                          // squash it
   const cell = sheet.locator('tbody tr').nth(1).locator('td').nth(2); // "Topps Tiles"
   await cell.hover();
-  await expect(cell).toHaveAttribute('title', 'Topps Tiles');
+  const tip = page.locator('.cb-celltip');
+  await expect(tip).toBeVisible({ timeout: 1000 });
+  await expect(tip).toHaveText('Topps Tiles');
+  expect(parseFloat(await tip.evaluate(el => getComputedStyle(el).fontSize))).toBeGreaterThanOrEqual(15);
+  // Every cell, not just ones that are cut off, and straight away when moving along.
+  const item = sheet.locator('tbody tr').nth(1).locator('td').nth(1);
+  await item.hover();
+  await expect(tip).toHaveText(await item.innerText(), { timeout: 200 });
+  await page.mouse.move(5, 5);
+  await expect(tip).toBeHidden();
   await waitSaved(page);
   expect(gh.files()['House/kitchen-renovation.md']).toMatch(/"widths":\[/);
   expect(problems).toEqual([]);

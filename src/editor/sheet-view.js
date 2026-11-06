@@ -291,7 +291,7 @@ export class SheetView {
     td.textContent = d.text;
     td.classList.toggle('cb-cell-formula', !!d.formula);
     td.classList.toggle('cb-cell-error', !!d.error);
-    if (d.title) td.title = d.title; else td.removeAttribute('title');
+    if (d.title) td.dataset.tip = d.title; else delete td.dataset.tip;
   }
 
   renderTotals() {
@@ -319,7 +319,7 @@ export class SheetView {
         }
         const hidden = cols[i] && cols[i].style.display === 'none' ? ' style="display:none"' : '';
         const align = this.alignFor(i) === 'right' || isFormula(raw) ? ' cb-right' : '';
-        return `<td data-tx="${i}" data-ty="${j}" class="${cls}${align}"${title ? ` title="${esc(title)}"` : ''}${hidden}>${esc(text)}</td>`;
+        return `<td data-tx="${i}" data-ty="${j}" class="${cls}${align}"${title ? ` data-tip="${esc(title)}"` : ''}${hidden}>${esc(text)}</td>`;
       }).join('')}
     </tr>`).join('');
   }
@@ -456,13 +456,18 @@ export class SheetView {
       e.stopPropagation();
       this.fitColumn(Number(th.dataset.x));
     }, true);
-    // Hovering over a cell whose text doesn't fit shows all of it.
+    // Hovering over a cell shows its full contents (or what's wrong with a formula).
     this.host.addEventListener('mouseover', e => {
       const td = e.target.closest?.('tbody td[data-x], tfoot td[data-tx]');
-      if (!td || td.classList.contains('cb-cell-error') || td.querySelector('input')) return;
-      if (td.scrollWidth > td.clientWidth + 1) td.title = td.textContent;
-      else if (td.title && td.title === td.textContent) td.removeAttribute('title');
+      if (!td || td.querySelector('input, textarea') || td.classList.contains('editor')) { cellTip.hide(); return; }
+      const text = td.dataset.tip || td.textContent.trim();
+      if (text) cellTip.show(td, text); else cellTip.hide();
     });
+    this.host.addEventListener('mouseout', e => {
+      if (!e.relatedTarget || !this.host.contains(e.relatedTarget)) cellTip.hide();
+    });
+    this.host.addEventListener('mousedown', () => cellTip.hide(), true);
+    this.host.addEventListener('keydown', () => cellTip.hide(), true);
   }
 
   // ------------------------------------------------------------ clicking cells into a formula
@@ -769,6 +774,7 @@ export class SheetView {
   }
 
   destroy() {
+    cellTip.hide();
     document.removeEventListener('mousedown', this.away, true);
     try { jspreadsheet.destroy(this.host, true); } catch { /* ignore */ }
     try { this.hf.destroy(); } catch { /* ignore */ }
@@ -776,3 +782,50 @@ export class SheetView {
 }
 
 export { mapRowRefs };
+
+/**
+ * One shared tooltip for spreadsheet cells. Appears quickly (and at once when moving
+ * between cells), larger than the browser's own, and never covers the cell itself.
+ */
+const cellTip = (() => {
+  let el = null, timer = 0, shownAt = 0, cell = null;
+  const place = () => {
+    const r = cell.getBoundingClientRect();
+    el.style.left = '0px'; el.style.top = '0px';
+    const t = el.getBoundingClientRect();
+    const left = Math.max(8, Math.min(r.left, window.innerWidth - t.width - 8));
+    let top = r.bottom + 6;
+    if (top + t.height > window.innerHeight - 8) top = r.top - t.height - 6;
+    el.style.left = `${Math.round(left)}px`;
+    el.style.top = `${Math.round(Math.max(8, top))}px`;
+  };
+  const hide = () => {
+    clearTimeout(timer);
+    if (el && !el.hidden) { el.hidden = true; shownAt = Date.now(); }
+    cell = null;
+  };
+  const show = (td, text) => {
+    if (td === cell && el && !el.hidden && el.textContent === text) return;
+    clearTimeout(timer);
+    const open = () => {
+      if (!td.isConnected) return;
+      if (!el) {
+        el = document.createElement('div');
+        el.className = 'cb-celltip';
+        el.setAttribute('role', 'tooltip');
+        el.hidden = true;
+        document.body.appendChild(el);
+        window.addEventListener('scroll', hide, true);
+        window.addEventListener('blur', hide);
+      }
+      cell = td;
+      el.textContent = text;
+      el.hidden = false;
+      place();
+    };
+    // Straight away if a tip was just showing (moving along a row); otherwise after a short pause.
+    const warm = (el && !el.hidden) || Date.now() - shownAt < 400;
+    if (warm) open(); else timer = setTimeout(open, 250);
+  };
+  return { show, hide };
+})();
