@@ -187,11 +187,23 @@ function browserSignIn(error = '', prefill = {}) {
 // ------------------------------------------------------------ start
 
 async function boot() {
-  // Opened from a share link: show just that note, read-only.
+  // Opened from a share link. A read-only note gets the simple page; a shared folder,
+  // or a link that allows editing, opens the app limited to what was shared.
   const shared = document.querySelector('meta[name="cb-share"]');
   if (shared) {
-    const { showShared } = await import('./share-view.js');
-    showShared(root, shared.content);
+    const token = shared.content;
+    let info = null;
+    try {
+      const r = await fetch(`api/guest.php?t=${encodeURIComponent(token)}&info=1`, { cache: 'no-store', credentials: 'same-origin' });
+      if (r.ok) info = await r.json();
+    } catch { /* fall back to the simple page, which explains what went wrong */ }
+    if (!info || (info.kind !== 'folder' && info.mode !== 'edit')) {
+      const { showShared } = await import('./share-view.js');
+      showShared(root, token);
+      return;
+    }
+    const { startApp } = await import('./app.js');
+    window.commitbook = await startApp(root, { owner: '_', repo: '_', guest: { token, kind: info.kind, mode: info.mode, path: info.path, title: info.title } });
     return;
   }
   const server = await detectServer();

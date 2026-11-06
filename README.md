@@ -14,7 +14,8 @@ your notes stay readable on GitHub, by any text editor and by AI assistants such
 - **History:** see every version of a note (even from before it was moved), restore any of them, and search old versions.
 - **Trash:** deleted notes can be restored.
 - **Share links** (when installed on your own hosting): give someone a private, unguessable link
-  to one note. They see it read-only and always up to date; you can stop sharing at any time.
+  to a note or a whole folder, either read-only or so they can edit those notes too. They always
+  see the latest version; you can stop sharing at any time.
 - **Auto-save or manual saving**, with a warning if you leave a note without saving.
 - **Changes made elsewhere** (another device, or Claude editing the repository) are picked up,
   and the app never silently overwrites them.

@@ -32,10 +32,16 @@ side in `public/api/` keeps the access key and provides the sign-in page.
   `github.php` must keep allowing only the configured repository and the API paths the app
   uses. Settings live outside the web folder (`cb_data_dir()`); never write secrets inside it.
   `src/main.js` detects hosted mode by asking `api/session.php`.
-- Share links (hosted only): `api/shares.php` (owner: list, create, revoke, repath),
-  `api/shared.php` (public: one note by token, front matter stripped, 15-second cache) and
-  `s/index.php` (serves the app page with a `cb-share` meta tag; `src/share-view.js` shows it).
-  Tokens are 40 hex characters. Shares follow moved notes by file name plus `created` date.
+- Share links (hosted only): `api/shares.php` (owner: list, create, mode, revoke, repath).
+  A link has a `kind` (`note` or `folder`) and a `mode` (`read` or `edit`).
+  `s/index.php` serves the app page with a `cb-share` meta tag; `src/main.js` asks
+  `api/guest.php?info=1` what it is. A read-only note uses the simple page (`src/share-view.js`,
+  data from `api/shared.php`: front matter stripped, 15-second cache). Folders and editable links
+  open the app in guest mode (`settings.guest`), whose store talks to `api/guest.php`: a
+  gatekeeper that only passes reads inside the share (trees filtered, blobs checked) and, in
+  edit mode, PUTs to existing `.md` files inside it. Keep the app's guest UI and the
+  gatekeeper's rules in step. Tokens are 40 hex characters. Note shares follow moved notes by
+  file name plus `created` date.
 - Releases: push a tag `vX.Y.Z` (matching `package.json` and `CB_VERSION` in `lib.php`) and the
   `Release` workflow attaches `commitbook-X.Y.Z.zip`.
 

@@ -518,3 +518,18 @@ code { font-family: var(--mono); font-size: 0.88em; }
 
 /* Safari: don't treat the spreadsheet (or anything in it) as draggable. */
 .cb-sheet, .cb-sheet * { -webkit-user-drag: none; }
+
+/* Opened from a shared link: only what the link allows. */
+.cb-guest #cb-new, .cb-guest #cb-old-wrap { display: none !important; }
+.cb-readonly #cb-tools, .cb-readonly .cb-switch, .cb-readonly #cb-save, .cb-readonly #cb-status { display: none !important; }
+.cb-readonly .cb-title { cursor: default; }
+.cb-guest-single { grid-template-columns: minmax(0, 1fr) auto; }
+.cb-guest-single .cb-side, .cb-guest-single .cb-back { display: none !important; }
+.cb-guest-single .cb-main { display: flex !important; }
+.cb-guest .cb-brand span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+/* Read only | Can edit, in the share dialogs */
+.cb-seg.cb-mode { display: inline-flex; margin: 0; padding: 2px; }
+.cb-seg.cb-mode button { flex: none; height: 24px; padding: 0 10px; font-size: 12.5px; }
+.cb-share-new .cb-field .cb-seg.cb-mode { justify-self: start; }
+.cb-share-title .ic { width: 15px; height: 15px; vertical-align: -2px; margin-right: 6px; color: var(--muted); }

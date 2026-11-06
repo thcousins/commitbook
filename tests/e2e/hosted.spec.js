@@ -165,3 +165,90 @@ test('on a shared page, contents links scroll on the same page', async ({ page, 
   await expect(guest.locator('.cb-shared-body a', { hasText: 'Web link' })).toHaveAttribute('target', '_blank');
   await guest.close();
 });
+
+test('share a folder: read only, then editable', async ({ page, browser }) => {
+  const note = (title, body) => `---\ntitle: "${title}"\ncreated: 2026-11-03T09:00:00Z\nupdated: 2026-11-03T09:00:00Z\n---\n\n${body}\n`;
+  for (const [path, text] of [
+    ['Trips/italy.md', note('Italy', 'Flights booked.')],
+    ['Trips/Days/rome.md', note('Rome', 'Colosseum at 10.')],
+  ]) await fetch(`${FAKE}/__put`, { method: 'POST', body: JSON.stringify({ path, text }) });
+  await signIn(page);
+  await page.locator('.cb-folder[data-folder="Trips"] .cb-folder-more').click({ force: true });
+  await page.locator('.cb-pop-item', { hasText: 'Share folder' }).click();
+  await expect(page.locator('.cb-modal h3')).toHaveText('Share folder “Trips”');
+  await expect(page.locator('.cb-modal .cb-share-new [data-mode="read"]')).toHaveAttribute('aria-pressed', 'true');
+  await page.locator('.cb-modal [data-act="create"]').click();
+  const url = await page.locator('.cb-modal .cb-share-link input').inputValue();
+  expect(url).toMatch(/\/s\/[0-9a-f]{40}$/);
+  await shot(page, '06-share-folder-dialog');
+  await page.locator('.cb-modal [data-act="close"]').click();
+  await expect(page.locator('.cb-folder[data-folder="Trips"] .cb-shared-mark')).toBeVisible();
+
+  // A friend opens it: just this folder, with its subfolder, read only.
+  const other = await browser.newContext();
+  const guest = await other.newPage();
+  await guest.goto(url);
+  await expect(guest.locator('.cb-brand')).toContainText('Trips');
+  await expect(guest.locator('.cb-item', { hasText: 'Italy' })).toBeVisible();
+  await expect(guest.locator('.cb-folder-row', { hasText: 'Days' })).toBeVisible();
+  await expect(guest.locator('.cb-item', { hasText: 'Gift ideas' })).toHaveCount(0);
+  await expect(guest.locator('.cb-folder-row', { hasText: 'Car' })).toHaveCount(0);
+  await expect(guest.locator('#cb-new')).toBeHidden();
+  await expect(guest.locator('.cb-folder-more, #cb-trash-link')).toHaveCount(0);
+  await expect(guest.locator('.cb-repo')).toHaveText('Shared · read only');
+  await guest.locator('.cb-folder-row', { hasText: 'Days' }).click();
+  await guest.locator('.cb-item', { hasText: 'Rome' }).click();
+  await expect(guest.locator('#cb-editor .tiptap')).toContainText('Colosseum');
+  await expect(guest.locator('#cb-editor .tiptap')).toHaveAttribute('contenteditable', 'false');
+  await expect(guest.locator('#cb-tools')).toBeHidden();
+  await expect(guest.locator('#cb-title')).toHaveAttribute('readonly', '');
+  await guest.screenshot({ path: `${SHOTS}/hosted-07-shared-folder.png` });
+
+  // The owner lets people with the link edit; the same link now allows changes.
+  await page.locator('#cb-menu').click();
+  await page.locator('.cb-pop-item', { hasText: 'Shared links' }).click();
+  const row = page.locator('.cb-modal .cb-share-row', { hasText: 'Trips' });
+  await row.locator('[data-mode="edit"]').click();
+  await expect(row.locator('[data-mode="edit"]')).toHaveAttribute('aria-pressed', 'true');
+  await page.locator('.cb-modal [data-act="close"]').click();
+
+  await guest.reload();
+  await expect(guest.locator('.cb-repo')).toHaveText('Shared · you can edit');
+  await guest.locator('.cb-item', { hasText: 'Italy' }).click();
+  await expect(guest.locator('#cb-editor .tiptap')).toHaveAttribute('contenteditable', 'true');
+  await toEnd(guest);
+  await guest.keyboard.type(' Hotel near the station.');
+  await expect.poll(async () => (await files())['Trips/italy.md'], { timeout: 15000 }).toContain('Hotel near the station.');
+  const saved = (await files())['Trips/italy.md'];
+  expect(saved).toContain('created: 2026-11-03T09:00:00Z');
+  expect(saved).toContain('title: "Italy"');
+  await guest.screenshot({ path: `${SHOTS}/hosted-08-shared-folder-edit.png` });
+
+  // Notes outside the folder stay out of reach, even by asking the server directly.
+  const outside = await guest.evaluate(async t => (await fetch(`api/guest.php?t=${t}&p=${encodeURIComponent('/repos/_/_/contents/gift-ideas.md')}`, { headers: { 'X-Commitbook': '1' } })).status, url.split('/').pop());
+  expect(outside).toBe(403);
+  await other.close();
+});
+
+test('share a note that the other person can edit', async ({ page, browser }) => {
+  await signIn(page);
+  await page.locator('.cb-item', { hasText: 'Welcome to Commitbook' }).click();
+  await page.locator('#cb-note-menu').click();
+  await page.locator('.cb-pop-item', { hasText: 'Share link' }).click();
+  await page.locator('.cb-modal .cb-share-new [data-mode="edit"]').click();
+  await page.locator('.cb-modal [data-act="create"]').click();
+  const url = await page.locator('.cb-modal .cb-share-link input').inputValue();
+  await expect(page.locator('.cb-modal .cb-share-row [data-mode="edit"]')).toHaveAttribute('aria-pressed', 'true');
+  await page.locator('.cb-modal [data-act="close"]').click();
+
+  const other = await browser.newContext();
+  const guest = await other.newPage();
+  await guest.goto(url);
+  await expect(guest.locator('#cb-title')).toHaveValue('Welcome to Commitbook');
+  await expect(guest.locator('.cb-side')).toBeHidden();
+  await toEnd(guest);
+  await guest.keyboard.type(' Edited by a friend.');
+  await expect.poll(async () => (await files())['welcome.md'], { timeout: 15000 }).toContain('Edited by a friend.');
+  await guest.screenshot({ path: `${SHOTS}/hosted-09-shared-note-edit.png` });
+  await other.close();
+});

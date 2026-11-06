@@ -64,18 +64,25 @@ To choose a folder yourself, set the `COMMITBOOK_DATA` environment variable.)
   they're on GitHub.
 - **Too many wrong passwords** lock sign-in for 15 minutes.
 
-## Sharing a note
+## Sharing notes and folders
 
-Open a note and choose **⋯ → Share link…** to make a private link such as
-`https://notes.example.com/s/9f3a…` (40 random characters, so it can't be guessed). Anyone with
-the link can read that one note, always as it is now, without signing in. They can't change it,
-see its tags or reach any other note.
+Open a note and choose **⋯ → Share link…**, or use **⋯** next to a folder and choose
+**Share folder…**, to make a private link such as `https://notes.example.com/s/9f3a…`
+(40 random characters, so it can't be guessed). Anyone with the link can open it without
+signing in, and always sees the notes as they are now. They can't reach any other note.
 
+- **Read only or Can edit.** Choose when you make the link, and change it later on the same
+  link. *Read only* shows the note (or the folder's notes, with a list of its subfolders to
+  find them). *Can edit* also lets them change those notes; their saves appear in the
+  revision history marked “(shared link)”. They can't add, move, delete or tag notes, or reach
+  anything outside what you shared.
+- A shared folder includes its subfolders, and notes you add to it later.
 - **Stop sharing** from the same place, or from **⋯ → Shared links** in the sidebar, which lists
   every link you've made. A link can also be set to stop working after a day, a week, a month or
   a year.
-- The link keeps working if the note is moved or renamed (in the app or directly in GitHub). It
-  stops while the note is in the Trash.
+- A note's link keeps working if the note is moved or renamed (in the app or directly in GitHub).
+  It stops while the note is in the Trash. A folder's link follows the folder when you rename
+  or move it in the app.
 - Links of the form `/s/…` rely on Apache's `mod_rewrite`, which cPanel hosts have. If yours
   doesn't, links still work written as `/s/?…` (the same 40 characters after the `?`).
 - The list of links is kept with your other settings, outside the web folder.
