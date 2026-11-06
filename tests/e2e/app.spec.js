@@ -539,10 +539,20 @@ test('column widths: drag wider or narrower, fit to contents, hover for full tex
     await page.mouse.up();
     return trace;
   };
+  // Record what happens during the drag (for diagnosing browser differences).
+  await page.evaluate(() => {
+    window.__ev = [];
+    const log = e => window.__ev.push(`${e.type}:${e.buttons ?? ''}:${(e.target.tagName || '').toLowerCase()}${e.target.dataset?.x ?? ''}${e.target.classList?.contains('resizing') ? '*' : ''}`);
+    for (const t of ['mousedown', 'mouseup', 'mouseover', 'dragstart', 'pointercancel', 'blur', 'focusout', 'click', 'scroll', 'selectstart']) document.addEventListener(t, log, true);
+    let n = 0;
+    document.addEventListener('mousemove', e => { if (n++ < 12) log(e); }, true);
+  });
   // Straight to the edge of a sheet that isn't active yet, slowly.
   const start = await width();
   let trace = await drag(240, 40, 25);
   info.annotations.push({ type: 'slow drag', description: trace.join(',') });
+  info.annotations.push({ type: 'events', description: (await page.evaluate(() => window.__ev)).join(' ') });
+  info.annotations.push({ type: 'header classes', description: await sheet.locator('thead').innerHTML() });
   expect(await width()).toBeGreaterThanOrEqual(start + 230);
   // Quickly.
   const mid = await width();
