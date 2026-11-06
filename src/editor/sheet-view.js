@@ -100,6 +100,7 @@ export class SheetView {
     });
     this.bindActive();
     this.bindPointing();
+    this.bindWidths();
     this.hf = HyperFormula.buildFromArray([[]], HF_CONFIG);
     this.build();
     this.showFx(null);
@@ -114,7 +115,7 @@ export class SheetView {
     }
     const s = this.sheet;
     const self = this;
-    const defaultWidth = i => Math.max(90, Math.min(260, 24 + 8 * Math.max(s.columns[i].length, ...s.rows.map(r => String(r[i]).length).slice(0, 50))));
+    const defaultWidth = i => Math.max(90, Math.min(360, 24 + 8 * Math.max(s.columns[i].length, ...s.rows.slice(0, 200).map(r => String(r[i]).length))));
     this.jss = jspreadsheet(this.host, {
       worksheets: [{
         data: s.rows.map(r => r.slice()),
@@ -394,6 +395,51 @@ export class SheetView {
     scroller.scrollTop = want;
   }
 
+  // ------------------------------------------------------------ column widths
+
+  /** Width that fits a column's heading and everything shown in it. */
+  fitWidth(x) {
+    const sample = this.host.querySelector('tbody td[data-x]') || this.host;
+    const head = this.host.querySelector(`thead td[data-x="${x}"]`) || sample;
+    const ctx = (this.measureCtx ||= document.createElement('canvas').getContext('2d'));
+    const fontOf = el => { const cs = getComputedStyle(el); return `${cs.fontStyle} ${cs.fontWeight} ${cs.fontSize} ${cs.fontFamily}`; };
+    ctx.font = fontOf(head);
+    let w = ctx.measureText(head.textContent || '').width;
+    ctx.font = fontOf(sample);
+    for (let y = 0; y < this.sheet.rows.length; y++) {
+      const td = this.ws.records?.[y]?.[x]?.element;
+      if (td) w = Math.max(w, ctx.measureText(td.textContent || '').width);
+    }
+    ctx.font = `600 ${getComputedStyle(sample).fontSize} ${getComputedStyle(sample).fontFamily}`;
+    this.host.querySelectorAll(`tfoot td[data-tx="${x}"]`).forEach(td => { w = Math.max(w, ctx.measureText(td.textContent || '').width); });
+    return Math.round(Math.max(48, Math.min(800, w + 24)));
+  }
+
+  fitColumn(x) {
+    this.ws.setWidth(x, this.fitWidth(x));
+    this.changed({ widths: true });
+  }
+
+  bindWidths() {
+    // Double-click a column's right edge (as in Excel) to fit it to its contents.
+    this.host.addEventListener('dblclick', e => {
+      const th = e.target.closest?.('thead td[data-x]');
+      if (!th || !this.editable) return;
+      const r = th.getBoundingClientRect();
+      if (e.clientX < r.right - 10) return;
+      e.preventDefault();
+      e.stopPropagation();
+      this.fitColumn(Number(th.dataset.x));
+    }, true);
+    // Hovering over a cell whose text doesn't fit shows all of it.
+    this.host.addEventListener('mouseover', e => {
+      const td = e.target.closest?.('tbody td[data-x], tfoot td[data-tx]');
+      if (!td || td.classList.contains('cb-cell-error') || td.querySelector('input')) return;
+      if (td.scrollWidth > td.clientWidth + 1) td.title = td.textContent;
+      else if (td.title && td.title === td.textContent) td.removeAttribute('title');
+    });
+  }
+
   // ------------------------------------------------------------ clicking cells into a formula
 
   /** The box being typed in, if it's a formula waiting for a cell or range. */
@@ -666,6 +712,7 @@ export class SheetView {
             this.build();
             this.onChange?.(clone(this.sheet));
           } },
+          { title: 'Fit column to contents', onclick: () => this.fitColumn(xi) },
           { title: 'Insert column left', onclick: () => ws.insertColumn(1, xi, true) },
           { title: 'Insert column right', onclick: () => ws.insertColumn(1, xi, false) },
           { title: 'Delete column', onclick: () => { if (this.sheet.columns.length > 1) ws.deleteColumn(xi, 1); } },

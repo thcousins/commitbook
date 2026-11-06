@@ -517,3 +517,53 @@ test('contents links jump to their headings, without changing the note', async (
   expect(gh.files()['long-note.md']).toBe(text);
   expect(problems).toEqual([]);
 });
+
+test('column widths: drag wider or narrower, fit to contents, hover for full text', async ({ page }, info) => {
+  const { gh, problems } = await setup(page);
+  await page.locator('.cb-folder-row', { hasText: 'House' }).click();
+  await openNote(page, 'Kitchen renovation');
+  const sheet = page.locator('.cb-sheet');
+  const head = sheet.locator('thead td').nth(2);                   // Supplier
+  const width = async () => Math.round((await head.boundingBox()).width);
+  const drag = async (dx, steps, pause) => {
+    const b = await head.boundingBox();
+    const x = b.x + b.width - 2, y = b.y + b.height / 2;
+    await page.mouse.move(x, y);
+    await page.mouse.down();
+    const trace = [];
+    for (let i = 1; i <= steps; i++) {
+      await page.mouse.move(x + (dx * i) / steps, y);
+      if (pause) await page.waitForTimeout(pause);
+      trace.push(await width());
+    }
+    await page.mouse.up();
+    return trace;
+  };
+  // Straight to the edge of a sheet that isn't active yet, slowly.
+  const start = await width();
+  let trace = await drag(240, 40, 25);
+  info.annotations.push({ type: 'slow drag', description: trace.join(',') });
+  expect(await width()).toBeGreaterThanOrEqual(start + 230);
+  // Quickly.
+  const mid = await width();
+  trace = await drag(200, 4, 0);
+  info.annotations.push({ type: 'quick drag', description: trace.join(',') });
+  expect(await width()).toBeGreaterThanOrEqual(mid + 190);
+  // Narrower.
+  const wide = await width();
+  await drag(-300, 20, 10);
+  expect(await width()).toBeLessThanOrEqual(wide - 290);
+  // Double-click the edge: fits the widest entry ("Topps Tiles", "Mark Ellis").
+  const b = await head.boundingBox();
+  await page.mouse.dblclick(b.x + b.width - 3, b.y + b.height / 2);
+  await expect.poll(width).toBeGreaterThan(60);
+  expect(await width()).toBeLessThan(160);
+  // Hover over text that's cut off shows all of it.
+  await drag(-200, 10, 0);                                          // squash it
+  const cell = sheet.locator('tbody tr').nth(1).locator('td').nth(2); // "Topps Tiles"
+  await cell.hover();
+  await expect(cell).toHaveAttribute('title', 'Topps Tiles');
+  await waitSaved(page);
+  expect(gh.files()['House/kitchen-renovation.md']).toMatch(/"widths":\[/);
+  expect(problems).toEqual([]);
+});
