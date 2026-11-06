@@ -101,6 +101,10 @@ export class SheetView {
     this.bindActive();
     this.bindPointing();
     this.bindWidths();
+    // Safari treats a block like this inside the note as something to drag and drop, which
+    // takes over the mouse part-way through resizing a column or selecting cells. Nothing
+    // in a spreadsheet is meant to be dragged that way.
+    this.dom.addEventListener('dragstart', e => e.preventDefault());
     this.hf = HyperFormula.buildFromArray([[]], HF_CONFIG);
     this.build();
     this.showFx(null);

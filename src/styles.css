@@ -515,3 +515,6 @@ code { font-family: var(--mono); font-size: 0.88em; }
 
 /* Text that doesn't fit a cell ends in … (hover to see it all). */
 .cb-grid .jss_worksheet > tbody > tr > td, .cb-grid tfoot.cb-totals td { overflow: hidden; text-overflow: ellipsis; }
+
+/* Safari: don't treat the spreadsheet (or anything in it) as draggable. */
+.cb-sheet, .cb-sheet * { -webkit-user-drag: none; }
