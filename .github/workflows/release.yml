@@ -40,6 +40,11 @@ jobs:
         run: |
           tag="${{ steps.zip.outputs.tag }}"
           notes="Download **${{ steps.zip.outputs.file }}** below and follow [the install guide](https://github.com/${{ github.repository }}/blob/main/docs/install.md)."
+          # Run by hand: make sure the tag marks this commit (an old tag of the same name is moved).
+          if [ "${GITHUB_REF_TYPE}" != "tag" ]; then
+            git tag -f "$tag"
+            git push -f origin "refs/tags/$tag"
+          fi
           if gh release view "$tag" > /dev/null 2>&1; then
             gh release upload "$tag" "${{ steps.zip.outputs.file }}" --clobber
           else
