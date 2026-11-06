@@ -64,6 +64,8 @@ test('loads notes and folders, opens a note with a spreadsheet', async ({ page }
   await expect(page.locator('#cb-title')).toHaveValue('Kitchen renovation');
   await expect(page.locator('.cb-meta')).toContainText('Created');
   await expect(page.locator('.cb-meta')).toContainText('House/kitchen-renovation.md');
+  // The note uses the full width of the window (1400 wide, minus the 300 px sidebar and margins).
+  expect((await page.locator('#cb-editor').boundingBox()).width).toBeGreaterThan(950);
   const sheet = page.locator('.cb-sheet').first();
   await expect(sheet.locator('thead')).toContainText('Supplier');
   await expect(sheet.locator('tfoot.cb-totals')).toContainText('£1,839.00');

@@ -121,6 +121,9 @@ test('share a note with a link, then stop sharing', async ({ page, browser }) =>
   await expect(guest.locator('.cb-shared-body')).toContainText('Lego Technic set');
   await expect(guest.locator('.cb-shared-body .tiptap')).toHaveAttribute('contenteditable', 'false');
   await expect(guest.locator('#cb-login, .cb-side')).toHaveCount(0);
+  // The note uses the full width of a wide window.
+  await guest.setViewportSize({ width: 1600, height: 900 });
+  expect((await guest.locator('.cb-shared-body').boundingBox()).width).toBeGreaterThan(1400);
   await guest.screenshot({ path: `${SHOTS}/hosted-05-shared-page.png` });
 
   // The owner stops sharing; the link no longer works.
