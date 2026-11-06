@@ -509,7 +509,9 @@ test('contents links jump to their headings, without changing the note', async (
   await shot(page, '18-contents-jump', info);
   await page.locator('#cb-scroll').evaluate(el => { el.scrollTop = 0; });
   await page.locator('#cb-editor a', { hasText: 'Car – MOT & tyres' }).click();
-  await expect.poll(async () => Math.abs((await top('#car--mot--tyres')) - scrollTop)).toBeLessThan(60);
+  // The last heading can't reach the top (nothing below it to scroll), but it comes into view.
+  await expect(page.locator('#car--mot--tyres')).toBeInViewport();
+  expect(await page.locator('#cb-scroll').evaluate(el => el.scrollTop)).toBeGreaterThan(1000);
   // Nothing was edited or saved, and no ids were written into the file.
   await expect(page.locator('.cb-status')).toHaveClass(/is-saved/);
   expect(gh.files()['long-note.md']).toBe(text);
