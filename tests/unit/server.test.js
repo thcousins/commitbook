@@ -283,3 +283,93 @@ test('share links: one note, read-only, follows moves, can be turned off', { ski
   assert.equal((await stranger.fetch(`/api/shared.php?t=${exp.token}`)).status, 404);
   assert.equal((await owner.json('/api/shares.php')).body.shares.length, 0, 'expired links are tidied away');
 });
+
+test('shared folders: only that folder, read-only or editable, nothing else reachable', { skip: !hasPhp && 'PHP not installed' }, async () => {
+  fs.writeFileSync(path.join(dataDir, 'attempts.json'), '{}');
+  const owner = new Browser();
+  await owner.form('/api/login.php', { username: 'tom', password: 'another long password' });
+  const make = body => owner.json('/api/shares.php', { method: 'POST', body: JSON.stringify(body) });
+  fake.gh.externalEdit({
+    'House/Kitchen/tiles.md': '---\ntitle: "Tiles"\ncreated: 2026-11-01T00:00:00Z\n---\n\nWhite metro tiles.\n',
+    'House/Kitchen/.keep': '',
+    'Private/bank.md': '---\ntitle: "Bank"\ncreated: 2026-11-01T00:00:00Z\n---\n\nSecret.\n',
+  });
+  assert.equal((await make({ action: 'create', kind: 'folder', path: '.trash' })).status, 422);
+  let r = await make({ action: 'create', kind: 'folder', path: 'House', title: 'House' });
+  const share = r.body.shares.find(x => x.kind === 'folder');
+  assert.equal(share.mode, 'read');
+  const t = share.token;
+  const guest = new Browser();
+  const api = (p, opts = {}) => guest.json(`/api/guest.php?t=${t}&p=${encodeURIComponent('/repos/_/_' + p)}`, opts);
+
+  // What's shared.
+  const info = await guest.fetch(`/api/guest.php?t=${t}&info=1`).then(x => x.json());
+  assert.deepEqual(info, { kind: 'folder', mode: 'read', path: 'House', title: 'House' });
+  assert.equal((await guest.fetch(`/api/guest.php?t=${'1'.repeat(40)}&info=1`)).status, 404);
+
+  // The app's own requests: the repository, the latest commit, the file list (only House).
+  const repo = await api('');
+  assert.equal(repo.body.permissions.push, false);
+  assert.ok(!JSON.stringify(repo.body).includes('notes'), 'repository name not shown');
+  const head = (await api('/git/ref/heads/main')).body.object.sha;
+  const tree = (await api(`/git/trees/${head}?recursive=1`)).body.tree.map(e => e.path).sort();
+  assert.deepEqual(tree, ['.commitbook/tags.json', 'House/Kitchen/.keep', 'House/Kitchen/tiles.md', 'House/kitchen-renovation.md']);
+  // Reading a note inside, by id and by path.
+  const tiles = (await api(`/git/trees/${head}?recursive=1`)).body.tree.find(e => e.path === 'House/Kitchen/tiles.md');
+  assert.equal((await api(`/git/blobs/${tiles.sha}`)).status, 200);
+  assert.equal((await api('/contents/House/Kitchen/tiles.md')).status, 200);
+  // Nothing outside it: not by path, not by file id, not its history.
+  const full = await (await fetch(`http://127.0.0.1:${GH_PORT}/__files`)).json();
+  assert.ok(full['Private/bank.md']);
+  const ownerTree = await owner.json('/api/github.php?p=' + encodeURIComponent(`/repos/me/notes/git/trees/${head}?recursive=1`));
+  const bank = ownerTree.body.tree.find(e => e.path === 'Private/bank.md');
+  assert.equal((await api(`/git/blobs/${bank.sha}`)).status, 403);
+  assert.equal((await api('/contents/Private/bank.md')).status, 403);
+  assert.equal((await api('/contents/House/../Private/bank.md')).status, 403);
+  assert.equal((await api('/commits?path=Private%2Fbank.md')).status, 403);
+  assert.equal((await api('/commits')).status, 403);
+  assert.equal((await api(`/commits/${head}`)).status, 200, 'the latest change touched House');
+  // Read-only: no saving.
+  const put = body => api('/contents/House/Kitchen/tiles.md', { method: 'PUT', body: JSON.stringify(body) });
+  assert.equal((await put({ message: 'x', content: Buffer.from('hi').toString('base64'), sha: tiles.sha })).status, 403);
+
+  // Switch the same link to editing.
+  r = await make({ action: 'mode', token: t, mode: 'edit' });
+  assert.equal(r.body.shares.find(x => x.token === t).mode, 'edit');
+  assert.equal((await api('')).body.permissions.push, true);
+  const edited = '---\ntitle: "Tiles"\ncreated: 2026-11-01T00:00:00Z\n---\n\nGrey metro tiles.\n';
+  r = await put({ message: 'Edit “Tiles”', content: Buffer.from(edited).toString('base64'), sha: tiles.sha, branch: 'main' });
+  assert.equal(r.status, 200);
+  assert.ok(fake.gh.files()['House/Kitchen/tiles.md'].includes('Grey'));
+  const log = await owner.json('/api/github.php?p=' + encodeURIComponent('/repos/me/notes/commits?path=House%2FKitchen%2Ftiles.md'));
+  assert.equal(log.body[0].commit.message, 'Edit “Tiles” (shared link)');
+  // Still no new notes, no saving outside, no other kinds of change.
+  assert.equal((await api('/contents/House/new.md', { method: 'PUT', body: JSON.stringify({ message: 'x', content: 'aGk=' }) })).status, 403);
+  assert.equal((await api('/contents/Private/bank.md', { method: 'PUT', body: JSON.stringify({ message: 'x', content: 'aGk=', sha: bank.sha }) })).status, 403);
+  assert.equal((await api('/contents/.commitbook/tags.json', { method: 'PUT', body: JSON.stringify({ message: 'x', content: 'e30=', sha: 'x' }) })).status, 403);
+  assert.equal((await api('/contents/House/Kitchen/tiles.md', { method: 'DELETE', body: JSON.stringify({ message: 'x', sha: 'x' }) })).status, 403);
+  assert.equal((await api('/git/trees', { method: 'POST', body: JSON.stringify({ tree: [] }) })).status, 403);
+  assert.equal((await api('/git/refs/heads/main', { method: 'PATCH', body: JSON.stringify({ sha: 'x' }) })).status, 403);
+  // Requests must come from the app.
+  assert.equal((await guest.fetch(`/api/guest.php?t=${t}&p=${encodeURIComponent('/repos/_/_')}`)).status, 400);
+
+  // A folder renamed in the app: the link follows it.
+  await make({ action: 'repath', path: 'House', to: 'Home', folder: true });
+  assert.equal((await guest.fetch(`/api/guest.php?t=${t}&info=1`).then(x => x.json())).path, 'Home');
+  await make({ action: 'repath', path: 'Home', to: 'House', folder: true });
+
+  // The whole notebook works through a shared link, limited to the folder.
+  const store = new Store({ owner: '_', repo: '_', token: null, proxy: `${BASE}/api/guest.php?t=${t}`, cacheName: 'guest-' + t, fetchImpl: (url, opts) => guest.fetch(url, opts) });
+  await store.connect();
+  await store.load();
+  assert.deepEqual([...store.notes.keys()].sort(), ['House/Kitchen/tiles.md', 'House/kitchen-renovation.md']);
+  const note = store.notes.get('House/Kitchen/tiles.md');
+  const saved = await store.saveNote(note, { title: 'Tiles', body: 'Grey metro tiles, matt.', tags: [] });
+  assert.ok(fake.gh.files()['House/Kitchen/tiles.md'].includes('matt'));
+  assert.ok((await store.history(saved.path)).length >= 2);
+  await assert.rejects(store.moveNote(saved, 'Private'));
+
+  // Turned off: everything stops.
+  await make({ action: 'revoke', token: t });
+  assert.equal((await api('')).status, 404);
+});

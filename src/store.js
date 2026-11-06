@@ -39,8 +39,9 @@ function noteFrom(path, text, sha) {
 }
 
 export class Store {
-  constructor({ owner, repo, token, proxy, fetchImpl, cacheName }) {
+  constructor({ owner, repo, token, proxy, fetchImpl, cacheName, readOnly = false }) {
     this.gh = new GitHubRepo({ owner, repo, token, proxy, fetchImpl });
+    this.readOnly = readOnly;     // a read-only shared link: never write
     this.key = `${owner}/${repo}`;
     this.cache = createCache(cacheName || this.key);
     this.notes = new Map();      // path -> note
@@ -67,7 +68,7 @@ export class Store {
 
   async connect() {
     const repo = await this.gh.getRepo();
-    if (repo.permissions && repo.permissions.push === false) {
+    if (repo.permissions && repo.permissions.push === false && !this.readOnly) {
       throw new GitHubError('The access key can read this repository but not save to it. It needs “Contents: Read and write”.', 403);
     }
     this.repoInfo = repo;
@@ -80,6 +81,7 @@ export class Store {
       let head = await this.gh.getHead();
       let initialised = false;
       if (!head) {
+        if (this.readOnly) throw new GitHubError('There are no notes here yet.', 404);
         await this.initialise();
         head = await this.gh.getHead();
         initialised = true;
@@ -463,10 +465,15 @@ export class Store {
     let before = null;          // only include commits older than the move we came through
     for (let hop = 0; hop < 20 && current && out.length < limit; hop++) {
       const commits = [];
-      for (let page = 1; page <= 5; page++) {
-        const batch = await this.gh.listCommits({ path: current, perPage: 100, page });
-        commits.push(...batch);
-        if (batch.length < 100) break;
+      try {
+        for (let page = 1; page <= 5; page++) {
+          const batch = await this.gh.listCommits({ path: current, perPage: 100, page });
+          commits.push(...batch);
+          if (batch.length < 100) break;
+        }
+      } catch (e) {
+        if (hop === 0) throw e;
+        break;                    // an earlier place the note was in isn't available (shared links)
       }
       let list = commits;
       if (before) {
@@ -482,7 +489,10 @@ export class Store {
       if (!oldest) break;
       // Was the note's file created here by moving it from somewhere else?
       let d = await this.cache.get('commit:' + oldest.sha);
-      if (d === undefined) { d = await this.gh.getCommit(oldest.sha); this.cache.set('commit:' + oldest.sha, d); }
+      if (d === undefined) {
+        try { d = await this.gh.getCommit(oldest.sha); } catch { break; }
+        this.cache.set('commit:' + oldest.sha, d);
+      }
       const f = d.files.find(x => x.path === current);
       if (!f || f.status !== 'renamed' || !f.previous) break;
       // The rename commit itself is the first version at the new path; carry on

@@ -379,3 +379,31 @@ function cb_find_shared_note(array $c, string $token, array &$share): ?array {
     }
     return null;
 }
+
+// ------------------------------------------------------------ shared notes and folders
+//
+// Each share has a kind ("note" or "folder") and a mode ("read" or "edit"). Links made before
+// folders and editing existed are read-only note links.
+
+function cb_share_kind(array $s): string { return ($s['kind'] ?? 'note') === 'folder' ? 'folder' : 'note'; }
+function cb_share_mode(array $s): string { return ($s['mode'] ?? 'read') === 'edit' ? 'edit' : 'read'; }
+
+/** The live share for a token, or null (unknown, malformed or expired). */
+function cb_share_for(string $token): ?array {
+    if (!preg_match(CB_SHARE_RE, $token)) return null;
+    $s = cb_shares()[$token] ?? null;
+    if (!$s || (!empty($s['expires']) && $s['expires'] <= time())) return null;
+    return $s;
+}
+
+/** Is a repository path inside what this share gives access to? */
+function cb_in_share(array $share, string $path, bool $noteOnly = false): bool {
+    $path = trim($path, '/');
+    if ($path === '' || strpos($path, '..') !== false) return false;
+    if (cb_share_kind($share) === 'note') return $path === $share['path'];
+    $folder = trim($share['path'], '/');
+    if (strpos($path, $folder . '/') !== 0) return false;
+    $rest = substr($path, strlen($folder) + 1);
+    if ($noteOnly) return (bool) preg_match('/\.md$/i', $rest) && !preg_match('#(^|/)\.#', $rest);
+    return !preg_match('#(^|/)\.(?!keep$)#', $rest);         // nothing hidden, except folder markers
+}

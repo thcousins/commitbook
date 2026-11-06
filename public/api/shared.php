@@ -9,9 +9,8 @@ $gone = fn() => cb_fail(404, 'This link isn’t valid, or sharing has been turne
 if (!preg_match(CB_SHARE_RE, $token)) $gone();
 $c = cb_config();
 if (!$c) $gone();
-$all = cb_shares();
-$share = $all[$token] ?? null;
-if (!$share || (!empty($share['expires']) && $share['expires'] <= time())) $gone();
+$share = cb_share_for($token);
+if (!$share || cb_share_kind($share) !== 'note') $gone();
 
 // A short cache, so a link that's busy doesn't use up GitHub's hourly allowance.
 $cacheFile = cb_data_dir() . '/share-cache-' . substr(hash('sha256', $token), 0, 16) . '.json';

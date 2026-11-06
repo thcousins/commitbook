@@ -50,7 +50,7 @@ export class GitHubRepo {
     let target, headers;
     if (this.proxy) {
       const path = `/repos/${this.owner}/${this.repo}${url}`;
-      target = `${this.proxy}?p=${encodeURIComponent(path)}`;
+      target = `${this.proxy}${this.proxy.includes('?') ? '&' : '?'}p=${encodeURIComponent(path)}`;
       headers = { Accept: 'application/json', 'X-Commitbook': '1', ...(body ? { 'Content-Type': 'application/json' } : {}) };
     } else {
       target = url.startsWith('http') ? url : this.base + url;
