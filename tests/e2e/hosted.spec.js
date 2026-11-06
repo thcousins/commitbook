@@ -212,13 +212,28 @@ test('share a folder: read only, then editable', async ({ page, browser }) => {
   await expect(row.locator('[data-mode="edit"]')).toHaveAttribute('aria-pressed', 'true');
   await page.locator('.cb-modal [data-act="close"]').click();
 
+  const log = [];
+  guest.on('console', m => log.push(`console ${m.type()}: ${m.text()}`));
+  guest.on('pageerror', e => log.push(`error: ${e.message}`));
+  guest.on('request', r => { if (r.url().includes('guest.php')) log.push(`${Date.now() % 100000} ${r.method()} ${decodeURIComponent(r.url().split('p=')[1] || r.url())}`); });
   await guest.reload();
   await expect(guest.locator('.cb-repo')).toHaveText('Shared · you can edit');
   await guest.locator('.cb-item', { hasText: 'Italy' }).click();
   await expect(guest.locator('#cb-editor .tiptap')).toHaveAttribute('contenteditable', 'true');
+  await expect(guest.locator('#cb-editor .tiptap')).toContainText('Flights booked.');
   await toEnd(guest);
+  log.push(`${Date.now() % 100000} typing`);
   await guest.keyboard.type(' Hotel near the station.');
-  await expect.poll(async () => (await files())['Trips/italy.md'], { timeout: 15000 }).toContain('Hotel near the station.');
+  log.push(`${Date.now() % 100000} typed: ${await guest.locator('#cb-editor .tiptap').innerText()}`);
+  try {
+    await expect.poll(async () => (await files())['Trips/italy.md'], { timeout: 15000 }).toContain('Hotel near the station.');
+  } catch (e) {
+    log.push('toasts: ' + await guest.locator('.cb-toast, .cb-modal').allInnerTexts());
+    log.push('editor: ' + await guest.locator('#cb-editor .tiptap').innerText());
+    await guest.screenshot({ path: `${SHOTS}/hosted-08-failed.png` });
+    fs.writeFileSync('test-output/guest-debug.log', log.join('\n'));
+    throw e;
+  }
   const saved = (await files())['Trips/italy.md'];
   expect(saved).toContain('created: 2026-11-03T09:00:00Z');
   expect(saved).toContain('title: "Italy"');
