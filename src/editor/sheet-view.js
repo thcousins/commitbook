@@ -45,6 +45,26 @@ function formulaHelper() {
 // Formula results the engine knows are dates or times show as such in "General" format.
 const DATE_KIND = { NUMBER_DATE: 'date', NUMBER_TIME: 'time', NUMBER_DATETIME: 'datetime' };
 
+// Safari sometimes reports a mouse event with no button pressed in the middle of a drag
+// (while the button is still held). The grid library takes that as the end of the drag, so
+// resizing a column or selecting cells stopped part-way. While a press that started in a
+// spreadsheet is held, those events are kept from the grid.
+let pressedInSheet = false;
+function guardSafariDrags() {
+  if (guardSafariDrags.done) return;
+  guardSafariDrags.done = true;
+  window.addEventListener('mousedown', e => { pressedInSheet = e.button === 0 && !!e.target.closest?.('.cb-grid'); }, true);
+  window.addEventListener('mouseup', () => { pressedInSheet = false; }, true);
+  window.addEventListener('blur', () => { pressedInSheet = false; });
+  for (const type of ['mouseover', 'mousemove']) {
+    document.addEventListener(type, e => { if (pressedInSheet && e.buttons === 0) e.stopPropagation(); }, true);
+  }
+  // Don't start selecting text while dragging across cells or column edges.
+  document.addEventListener('selectstart', e => {
+    if (e.target.closest?.('.cb-grid') && !e.target.closest('input, textarea')) e.preventDefault();
+  }, true);
+}
+
 const colName = i => { let s = ''; i++; while (i) { const m = (i - 1) % 26; s = String.fromCharCode(65 + m) + s; i = Math.floor((i - 1) / 26); } return s; };
 const isFormula = v => typeof v === 'string' && v.trim().startsWith('=');
 const clone = s => JSON.parse(JSON.stringify(s));
@@ -105,6 +125,7 @@ export class SheetView {
     // takes over the mouse part-way through resizing a column or selecting cells. Nothing
     // in a spreadsheet is meant to be dragged that way.
     this.dom.addEventListener('dragstart', e => e.preventDefault());
+    guardSafariDrags();
     this.hf = HyperFormula.buildFromArray([[]], HF_CONFIG);
     this.build();
     this.showFx(null);
