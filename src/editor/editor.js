@@ -16,7 +16,9 @@ export function createEditor({ element, markdown = '', editable = true, onChange
       StarterKit.configure({
         heading: { levels: [1, 2, 3] },
         underline: false,          // not part of standard Markdown
-        link: { openOnClick: !editable, autolink: true, linkOnPaste: true, defaultProtocol: 'https' },
+        // The editor never opens links itself: in read-only views the browser opens web links
+        // in a new tab, and links to a heading (#…) scroll on the same page (heading-anchors.js).
+        link: { openOnClick: false, autolink: true, linkOnPaste: true, defaultProtocol: 'https' },
         codeBlock: { HTMLAttributes: { class: 'cb-code' } },
       }),
       TaskList,

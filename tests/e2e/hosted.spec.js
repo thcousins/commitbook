@@ -137,3 +137,31 @@ test('share a note with a link, then stop sharing', async ({ page, browser }) =>
   await expect(guest.locator('.cb-empty h2')).toHaveText('This note isn’t available');
   await other.close();
 });
+
+test('on a shared page, contents links scroll on the same page', async ({ page, browser }) => {
+  const filler = n => Array.from({ length: n }, (_, i) => `Paragraph ${i + 1} of filler text.`).join('\n\n');
+  const text = '---\ntitle: "Shared long note"\ncreated: 2026-11-02T09:00:00Z\nupdated: 2026-11-02T09:00:00Z\n---\n\n'
+    + '- [Web link](https://example.com/)\n- [Jump down](#the-end)\n\n' + filler(40) + '\n\n## The end\n\nDone.\n';
+  await fetch(`${FAKE}/__put`, { method: 'POST', body: JSON.stringify({ path: 'shared-long-note.md', text }) });
+  await signIn(page);
+  const shares = await page.evaluate(async () => {
+    const r = await fetch('api/shares.php', { method: 'POST', headers: { 'X-Commitbook': '1', 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'create', path: 'shared-long-note.md', title: 'Shared long note', created: '2026-11-02T09:00:00Z' }) });
+    return (await r.json()).shares;
+  });
+  const token = shares.find(s => s.path === 'shared-long-note.md').token;
+  // Opened in the same browser as a signed-in owner: still just the shared page.
+  const ctx = page.context();
+  const guest = await ctx.newPage();
+  await guest.goto(`${HOSTED}/s/${token}`);
+  await expect(guest.locator('.cb-title-static')).toHaveText('Shared long note');
+  const pagesBefore = ctx.pages().length;
+  await guest.locator('.cb-shared-body a', { hasText: 'Jump down' }).click();
+  await expect(guest.locator('#the-end')).toBeInViewport();
+  await guest.waitForTimeout(500);
+  expect(ctx.pages().length).toBe(pagesBefore);                  // no new tab
+  expect(guest.url()).toBe(`${HOSTED}/s/${token}`);              // still on the shared page
+  await expect(guest.locator('.cb-side')).toHaveCount(0);
+  // Ordinary web links still open in a new tab.
+  await expect(guest.locator('.cb-shared-body a', { hasText: 'Web link' })).toHaveAttribute('target', '_blank');
+  await guest.close();
+});

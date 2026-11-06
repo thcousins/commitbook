@@ -13,6 +13,12 @@ export function startFakeServer(port = 4999) {
     req.on('end', () => {
       seen.push({ method: req.method, url: req.url, auth: req.headers.authorization || '' });
       if (req.url === '/__reset') { gh = createFakeGitHub({ files: SEED }); seen.length = 0; res.end('ok'); return; }
+      if (req.url === '/__put' && req.method === 'POST') {
+        const { path, text } = JSON.parse(raw || '{}');
+        gh.externalEdit({ [path]: text });
+        res.end('ok');
+        return;
+      }
       if (req.url === '/__files') { res.setHeader('content-type', 'application/json'); res.end(JSON.stringify(gh.files())); return; }
       if (req.url === '/__seen') { res.setHeader('content-type', 'application/json'); res.end(JSON.stringify(seen)); return; }
       if (req.headers.authorization !== 'Bearer test-token') {
