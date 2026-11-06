@@ -491,3 +491,27 @@ test('formula bar keeps the cell marked, and cells can be clicked into a formula
   expect(gh.files()['Car/mot-and-tyres.md']).toContain('=SUM(C1:C3)+D1');
   expect(problems).toEqual([]);
 });
+
+test('contents links jump to their headings, without changing the note', async ({ page }, info) => {
+  const filler = n => Array.from({ length: n }, (_, i) => `Paragraph ${i + 1} of filler text to make the note long.`).join('\n\n');
+  const body = '## Contents\n\n- [Costs so far](#costs-so-far)\n- [Car – MOT & tyres](#car--mot--tyres)\n\n'
+    + filler(30) + '\n\n## Costs so far\n\nThe costs.\n\n' + filler(30) + '\n\n## Car – MOT & tyres\n\nThe car.\n';
+  const text = `---\ntitle: "Long note"\ncreated: 2026-11-01T09:00:00Z\nupdated: 2026-11-01T09:00:00Z\n---\n\n${body}`;
+  const { gh, problems } = await setup(page, { files: { ...SEED, 'long-note.md': text } });
+  await openNote(page, 'Long note');
+  await expect(page.locator('#cb-editor h2#costs-so-far')).toHaveCount(1);
+  await expect(page.locator('#cb-editor h2#car--mot--tyres')).toHaveCount(1);
+  const top = async sel => (await page.locator(sel).boundingBox()).y;
+  const scrollTop = (await page.locator('#cb-scroll').boundingBox()).y;
+  expect(await top('#costs-so-far')).toBeGreaterThan(900);           // well below the fold
+  await page.locator('#cb-editor a', { hasText: 'Costs so far' }).click();
+  await expect.poll(async () => Math.abs((await top('#costs-so-far')) - scrollTop)).toBeLessThan(60);
+  await shot(page, '18-contents-jump', info);
+  await page.locator('#cb-scroll').evaluate(el => { el.scrollTop = 0; });
+  await page.locator('#cb-editor a', { hasText: 'Car – MOT & tyres' }).click();
+  await expect.poll(async () => Math.abs((await top('#car--mot--tyres')) - scrollTop)).toBeLessThan(60);
+  // Nothing was edited or saved, and no ids were written into the file.
+  await expect(page.locator('.cb-status')).toHaveClass(/is-saved/);
+  expect(gh.files()['long-note.md']).toBe(text);
+  expect(problems).toEqual([]);
+});

@@ -153,3 +153,14 @@ test('history grouped by day', async () => {
   assert.deepEqual(g.map(x => [x.label, x.items.length, x.today]), [['Today', 2, true], ['Yesterday', 1, false], ['Tue 20 Oct 2026', 2, false]]);
   assert.deepEqual(g[2].items.map(x => x.i), [3, 4]);
 });
+
+test('heading anchors match GitHub', async () => {
+  const { headingSlug, slugger } = await import('../../src/lib/anchors.js');
+  assert.equal(headingSlug('Costs so far'), 'costs-so-far');
+  assert.equal(headingSlug('Car – MOT & tyres'), 'car--mot--tyres');
+  assert.equal(headingSlug('What’s next?'), 'whats-next');
+  assert.equal(headingSlug('Café notes 2026'), 'café-notes-2026');
+  assert.equal(headingSlug('snake_case and-hyphen'), 'snake_case-and-hyphen');
+  const s = slugger();
+  assert.deepEqual(['Notes', 'Notes', 'Notes-1', 'Notes'].map(s), ['notes', 'notes-1', 'notes-1-1', 'notes-2']);
+});

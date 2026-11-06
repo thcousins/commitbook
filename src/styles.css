@@ -505,3 +505,10 @@ code { font-family: var(--mono); font-size: 0.88em; }
 .cb-shared-page .cb-editor .tiptap { min-height: 0; }
 .cb-shared-foot { display: flex; align-items: center; justify-content: center; gap: 6px; padding: 16px; padding-bottom: max(16px, env(safe-area-inset-bottom, 0px)); color: var(--faint); font-size: 12.5px; border-top: 1px solid var(--line); }
 .cb-shared-foot .ic { width: 15px; height: 15px; }
+
+/* Headings that a contents link jumps to */
+.cb-editor :is(h1, h2, h3) { scroll-margin-top: 16px; }
+.cb-editor a[href^="#"] { text-decoration-style: dotted; }
+@keyframes cb-anchor-flash { from { background: var(--accent-soft); } to { background: transparent; } }
+.cb-anchor-flash { animation: cb-anchor-flash 1.6s ease-out; border-radius: 4px; }
+@media (prefers-reduced-motion: reduce) { .cb-anchor-flash { animation: none; } }

@@ -1,6 +1,7 @@
 // The page someone sees when they open a share link: one note, read-only, kept up to date.
 
 import { createEditor } from './editor/editor.js';
+import { jumpToAnchor } from './editor/heading-anchors.js';
 import { esc, longDate } from './lib/util.js';
 import { icon } from './ui/icons.js';
 
@@ -16,6 +17,7 @@ export function showShared(root, token) {
   let editor = null;
   let last = null;
   let timer = null;
+  let first = true;
 
   const gone = () => {
     clearInterval(timer);
@@ -52,6 +54,9 @@ export function showShared(root, token) {
       <div class="cb-editor cb-shared-body"></div>`;
     editor = createEditor({ element: page.querySelector('.cb-shared-body'), markdown: note.body || '', editable: false });
     scroller.scrollTop = scroll;
+    // A link to a section of a shared note (…/s/<token>#costs-so-far) opens at that section.
+    if (first && location.hash) jumpToAnchor(page, location.hash);
+    first = false;
   };
 
   load();

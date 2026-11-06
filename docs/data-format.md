@@ -36,6 +36,8 @@ Body text in Markdown…
   **bold**, *italic*, ~~strikethrough~~, `code`, links, bullet and numbered lists,
   checklists (`- [ ]` / `- [x]`), block quotes, code blocks and horizontal rules.
   No raw HTML (except the spreadsheet comment below), footnotes or other extensions.
+- Links to a heading in the same note use GitHub-style anchors: lower case, punctuation
+  removed, spaces as hyphens (`[Costs so far](#costs-so-far)`). They work in the app and on GitHub.
 
 ## Spreadsheets
 

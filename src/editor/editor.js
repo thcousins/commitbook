@@ -6,6 +6,7 @@ import { TaskList, TaskItem } from '@tiptap/extension-list';
 import { Placeholder } from '@tiptap/extensions';
 import { Markdown } from '@tiptap/markdown';
 import { Sheet } from './sheet-node.js';
+import { HeadingAnchors } from './heading-anchors.js';
 
 export function createEditor({ element, markdown = '', editable = true, onChange, onSelection }) {
   const editor = new Editor({
@@ -23,6 +24,7 @@ export function createEditor({ element, markdown = '', editable = true, onChange
       Placeholder.configure({ placeholder: 'Start writing… Type # for a heading, - for a list, [ ] for a checklist.' }),
       Markdown.configure({ markedOptions: { gfm: true } }),
       Sheet,
+      HeadingAnchors,
     ],
     content: markdown,
     contentType: 'markdown',
