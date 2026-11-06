@@ -7,7 +7,7 @@
 
 if (!defined('COMMITBOOK')) { http_response_code(404); exit; }
 
-const CB_VERSION = '0.4.1';
+const CB_VERSION = '0.5.0';
 const CB_REMEMBER_DAYS = 90;
 const CB_MAX_FAILS = 5;          // per address, per window
 const CB_MAX_FAILS_ALL = 25;     // from everywhere, per window
@@ -297,3 +297,85 @@ function cb_parse_repo(string $v): ?array {
 }
 
 function cb_valid_username(string $u): bool { return (bool) preg_match('/^[A-Za-z0-9._@+-]{2,64}$/', $u); }
+
+// ------------------------------------------------------------ share links
+//
+// A share link is a long random token that shows one note, read-only, to anyone who
+// has it. The list lives in shares.json in the settings folder (outside the web folder):
+//   { "<token>": { "path": "House/boiler.md", "created": "<note's created date>",
+//                  "title": "Boiler", "made": 1730900000, "expires": 0 } }
+
+const CB_SHARE_RE = '/^[0-9a-f]{40}$/';
+
+function cb_shares(): array { return cb_read_json('shares.json'); }
+function cb_save_shares(array $s): void { cb_write_json('shares.json', $s); }
+
+function cb_new_token(): string { return bin2hex(random_bytes(20)); }
+
+/** Split a note file into its front matter fields and body. */
+function cb_split_note(string $text): array {
+    $text = str_replace(["\r\n", "\r"], "\n", preg_replace('/^\xEF\xBB\xBF/', '', $text));
+    $data = [];
+    if (preg_match('/^---\n(.*?)\n---[ \t]*(?:\n|$)/s', $text, $m)) {
+        foreach (explode("\n", $m[1]) as $line) {
+            if (!preg_match('/^([A-Za-z_][\w-]*):\s*(.*)$/', $line, $km)) continue;
+            $v = trim($km[2]);
+            if ($v !== '' && $v[0] === '"') { $j = json_decode($v, true); $v = is_string($j) ? $j : trim($v, '"'); }
+            elseif ($v !== '' && $v[0] === "'") $v = str_replace("''", "'", substr($v, 1, -1));
+            $data[$km[1]] = $v;
+        }
+        $text = ltrim(substr($text, strlen($m[0])), "\n");
+    }
+    return [$data, $text];
+}
+
+/** One file's text from the notes repository, or null. */
+function cb_repo_file(array $c, string $path): ?string {
+    $enc = implode('/', array_map('rawurlencode', explode('/', $path)));
+    [$status, $body] = cb_github('GET', "/repos/{$c['owner']}/{$c['repo']}/contents/$enc", null, $c['token'], $c);
+    if ($status !== 200) return null;
+    $d = json_decode($body, true);
+    if (!is_array($d) || !isset($d['sha'])) return null;
+    if (($d['encoding'] ?? '') === 'base64' && ($d['content'] ?? '') !== '') return base64_decode($d['content']);
+    [$s2, $b2] = cb_github('GET', "/repos/{$c['owner']}/{$c['repo']}/git/blobs/{$d['sha']}", null, $c['token'], $c);
+    $blob = json_decode($b2, true);
+    return $s2 === 200 && isset($blob['content']) ? base64_decode($blob['content']) : null;
+}
+
+/**
+ * Find the note a share points at. Notes can be moved or renamed (by the app or by
+ * Claude), so if it isn't at its last known path, look for a note with the same file
+ * name and the same `created` date elsewhere, and remember where it went.
+ * Returns [path, frontMatter, body] or null (deleted, in the Trash, or not found).
+ */
+function cb_find_shared_note(array $c, string $token, array &$share): ?array {
+    $match = function (?string $text) use ($share) {
+        if ($text === null) return null;
+        [$data, $body] = cb_split_note($text);
+        if (!empty($share['created']) && ($data['created'] ?? '') !== $share['created']) return null;
+        return [$data, $body];
+    };
+    $hit = $match(cb_repo_file($c, $share['path']));
+    if ($hit) return [$share['path'], $hit[0], $hit[1]];
+
+    [$status, $body] = cb_github('GET', "/repos/{$c['owner']}/{$c['repo']}", null, $c['token'], $c);
+    $branch = $status === 200 ? (json_decode($body, true)['default_branch'] ?? 'main') : 'main';
+    [$status, $body] = cb_github('GET', "/repos/{$c['owner']}/{$c['repo']}/git/trees/" . rawurlencode($branch) . '?recursive=1', null, $c['token'], $c);
+    if ($status !== 200) return null;
+    $name = basename($share['path']);
+    $tried = 0;
+    foreach (json_decode($body, true)['tree'] ?? [] as $e) {
+        $p = $e['path'] ?? '';
+        if (($e['type'] ?? '') !== 'blob' || basename($p) !== $name || $p === $share['path']) continue;
+        if (preg_match('#(^|/)\.#', $p)) continue;          // hidden folders, including the Trash
+        if (++$tried > 10) break;
+        $hit = $match(cb_repo_file($c, $p));
+        if ($hit) {
+            $all = cb_shares();
+            if (isset($all[$token])) { $all[$token]['path'] = $p; cb_save_shares($all); }
+            $share['path'] = $p;
+            return [$p, $hit[0], $hit[1]];
+        }
+    }
+    return null;
+}

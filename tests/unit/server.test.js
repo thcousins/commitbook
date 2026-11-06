@@ -12,7 +12,7 @@ import { Store } from '../../src/store.js';
 const hasPhp = spawnSync('php', ['-v']).status === 0;
 const PHP_PORT = 4176, GH_PORT = 4998;
 const BASE = `http://127.0.0.1:${PHP_PORT}`;
-let php, fake, dataDir;
+let php, fake, dataDir, webRoot;
 
 class Browser {
   constructor() { this.jar = new Map(); }
@@ -44,7 +44,11 @@ before(async () => {
   if (!hasPhp) return;
   fake = await startFakeServer(GH_PORT);
   dataDir = fs.mkdtempSync(path.join(os.tmpdir(), 'cb-data-'));
-  php = spawn('php', ['-S', `127.0.0.1:${PHP_PORT}`, '-t', 'public'], {
+  // Serve a copy of the server files plus the app page, as an installed copy would be.
+  webRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'cb-web-'));
+  fs.cpSync('public', webRoot, { recursive: true });
+  fs.copyFileSync('index.html', path.join(webRoot, 'index.html'));
+  php = spawn('php', ['-S', `127.0.0.1:${PHP_PORT}`, '-t', webRoot], {
     env: { ...process.env, COMMITBOOK_DATA: dataDir, COMMITBOOK_API_BASE: `http://127.0.0.1:${GH_PORT}` },
     stdio: 'ignore',
   });
@@ -57,6 +61,7 @@ after(() => {
   php?.kill();
   fake?.server.close();
   if (dataDir) fs.rmSync(dataDir, { recursive: true, force: true });
+  if (webRoot) fs.rmSync(webRoot, { recursive: true, force: true });
 });
 
 test('server side: setup, sign in and out, proxy limits, key stays on the server', { skip: !hasPhp && 'PHP not installed' }, async () => {
@@ -191,4 +196,90 @@ test('the whole notebook works through the server, without the key in the app', 
   // Every request GitHub saw carried the key added by the server.
   const seen = (await (await fetch(`http://127.0.0.1:${GH_PORT}/__seen`)).json()).slice(already).filter(x => !x.url.startsWith('/__'));
   assert.ok(seen.length > 5 && seen.every(x => x.auth === 'Bearer test-token'));
+});
+
+test('share links: one note, read-only, follows moves, can be turned off', { skip: !hasPhp && 'PHP not installed' }, async () => {
+  fs.writeFileSync(path.join(dataDir, 'attempts.json'), '{}');
+  const owner = new Browser();
+  await owner.form('/api/login.php', { username: 'tom', password: 'another long password' });
+  assert.equal((await owner.json('/api/session.php')).body.signedIn, true);
+  const make = body => owner.json('/api/shares.php', { method: 'POST', body: JSON.stringify(body) });
+
+  // Only the owner can make or list links.
+  const stranger = new Browser();
+  assert.equal((await stranger.json('/api/shares.php')).status, 401);
+  assert.equal((await make({ action: 'create', path: '.trash/x.md' })).status, 422);
+  assert.equal((await make({ action: 'create', path: '../config.php' })).status, 422);
+
+  let r = await make({ action: 'create', path: 'gift-ideas.md', title: 'Gift ideas', created: '2026-09-12T10:00:00Z' });
+  assert.equal(r.status, 200);
+  const share = r.body.shares.find(s => s.path === 'gift-ideas.md');
+  assert.match(share.token, /^[0-9a-f]{40}$/);
+  const view = () => stranger.fetch(`/api/shared.php?t=${share.token}`).then(async x => ({ status: x.status, body: await x.json() }));
+  const clearCache = () => { for (const f of fs.readdirSync(dataDir)) if (f.startsWith('share-cache-')) fs.unlinkSync(path.join(dataDir, f)); };
+
+  // Anyone with the link sees that note (but not its tags or anything else), without signing in.
+  let v = await view();
+  assert.equal(v.status, 200);
+  assert.equal(v.body.title, 'Gift ideas');
+  assert.ok(v.body.body.includes('Lego Technic set'));
+  assert.ok(!JSON.stringify(v.body).includes('Gifts'), 'tags stay private');
+  assert.ok(!v.body.body.startsWith('---'));
+
+  // The share page is the app, told which link it's showing.
+  const page = await stranger.fetch(`/s/${share.token}`);
+  const html = await page.text();
+  assert.equal(page.status, 200);
+  assert.ok(html.includes(`<meta name="cb-share" content="${share.token}"`));
+  assert.ok(html.includes('<base href="/"'));
+
+  // A wrong or made-up link shows nothing.
+  assert.equal((await stranger.fetch(`/api/shared.php?t=${'0'.repeat(40)}`)).status, 404);
+  assert.equal((await stranger.fetch('/api/shared.php?t=gift-ideas')).status, 404);
+
+  // Live: an edit shows up (after the short cache).
+  const text = fake.gh.files()['gift-ideas.md'];
+  fake.gh.externalEdit({ 'gift-ideas.md': text.replace('Lego Technic set', 'Lego Technic crane') });
+  clearCache();
+  assert.ok((await view()).body.body.includes('Lego Technic crane'));
+
+  // Moved somewhere else (e.g. by Claude): the link follows it.
+  const moved = fake.gh.files()['gift-ideas.md'];
+  fake.gh.externalEdit({ 'gift-ideas.md': null, 'Presents/gift-ideas.md': moved });
+  clearCache();
+  v = await view();
+  assert.equal(v.status, 200);
+  const list = (await owner.json('/api/shares.php')).body.shares;
+  assert.equal(list.find(s => s.token === share.token).path, 'Presents/gift-ideas.md');
+
+  // A different note later taking the old name isn't shown by mistake.
+  fake.gh.externalEdit({ 'gift-ideas.md': '---\ntitle: "Other"\ncreated: 2026-11-01T00:00:00Z\n---\n\nSomething else\n' });
+  r = await make({ action: 'repath', path: 'Presents/gift-ideas.md', to: 'gift-ideas.md' });
+  clearCache();
+  v = await view();
+  assert.equal(v.status, 200);
+  assert.ok(v.body.body.includes('Lego'), 'still the shared note, found by its created date');
+
+  // In the Trash: the link stops working.
+  fake.gh.externalEdit({ 'Presents/gift-ideas.md': null, '.trash/Presents/gift-ideas.md': moved });
+  clearCache();
+  assert.equal((await view()).status, 404);
+
+  // Turned off: gone for good.
+  fake.gh.externalEdit({ '.trash/Presents/gift-ideas.md': null, 'Presents/gift-ideas.md': moved });
+  clearCache();
+  assert.equal((await view()).status, 200);
+  await make({ action: 'revoke', token: share.token });
+  clearCache();
+  assert.equal((await view()).status, 404);
+
+  // Links can expire.
+  r = await make({ action: 'create', path: 'Presents/gift-ideas.md', title: 'Gift ideas', days: 7 });
+  const exp = r.body.shares[0];
+  assert.ok(exp.expires > Date.now() / 1000 + 6 * 86400);
+  const shares = JSON.parse(fs.readFileSync(path.join(dataDir, 'shares.json'), 'utf8'));
+  shares[exp.token].expires = 1;
+  fs.writeFileSync(path.join(dataDir, 'shares.json'), JSON.stringify(shares));
+  assert.equal((await stranger.fetch(`/api/shared.php?t=${exp.token}`)).status, 404);
+  assert.equal((await owner.json('/api/shares.php')).body.shares.length, 0, 'expired links are tidied away');
 });

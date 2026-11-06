@@ -385,7 +385,7 @@ export class SheetView {
     change();
     const delta = this.host.getBoundingClientRect().top - before;
     if (!delta) return;
-    const scroller = this.dom.closest('.cb-scroll, .cb-drawer-body');
+    const scroller = this.dom.closest('.cb-scroll, .cb-drawer-body, .cb-shared');
     if (!scroller) return;
     const want = scroller.scrollTop + delta;
     // A short note may not be tall enough to scroll; make room so the table can stay put.

@@ -64,6 +64,22 @@ To choose a folder yourself, set the `COMMITBOOK_DATA` environment variable.)
   they're on GitHub.
 - **Too many wrong passwords** lock sign-in for 15 minutes.
 
+## Sharing a note
+
+Open a note and choose **⋯ → Share link…** to make a private link such as
+`https://notes.example.com/s/9f3a…` (40 random characters, so it can't be guessed). Anyone with
+the link can read that one note, always as it is now, without signing in. They can't change it,
+see its tags or reach any other note.
+
+- **Stop sharing** from the same place, or from **⋯ → Shared links** in the sidebar, which lists
+  every link you've made. A link can also be set to stop working after a day, a week, a month or
+  a year.
+- The link keeps working if the note is moved or renamed (in the app or directly in GitHub). It
+  stops while the note is in the Trash.
+- Links of the form `/s/…` rely on Apache's `mod_rewrite`, which cPanel hosts have. If yours
+  doesn't, links still work written as `/s/?…` (the same 40 characters after the `?`).
+- The list of links is kept with your other settings, outside the web folder.
+
 ## Updating
 
 Download the new zip and extract it over the old files, replacing them. Your settings live

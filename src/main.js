@@ -187,6 +187,13 @@ function browserSignIn(error = '', prefill = {}) {
 // ------------------------------------------------------------ start
 
 async function boot() {
+  // Opened from a share link: show just that note, read-only.
+  const shared = document.querySelector('meta[name="cb-share"]');
+  if (shared) {
+    const { showShared } = await import('./share-view.js');
+    showShared(root, shared.content);
+    return;
+  }
   const server = await detectServer();
   if (server) {
     if (!server.setup) { setupScreen(); return; }

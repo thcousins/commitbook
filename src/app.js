@@ -69,6 +69,8 @@ class App {
       return;
     }
     this.store.on(what => { if (what === 'busy') this.renderStatus(); });
+    this.shares = new Map();      // note path -> its share links (hosted only)
+    if (this.hosted) this.loadShares();
     await this.recoverDrafts();
     this.renderSidebar();
     const last = local.get(`cb:last:${this.repoKey}`);
@@ -296,7 +298,7 @@ class App {
     const hasSheet = n.body.includes('commitbook:sheet');
     const snip = (n.preview ?? n.plain).slice(0, 120);
     return `<button type="button" class="cb-item${cur ? ' is-current' : ''}" data-path="${esc(n.path)}" draggable="true" style="--depth:${depth}" ${cur ? 'aria-current="true"' : ''}>
-      <div class="cb-item-title"><span>${esc(n.title)}</span>${hasSheet ? icon('sheet', 'cb-mini') : ''}</div>
+      <div class="cb-item-title"><span>${esc(n.title)}</span>${hasSheet ? icon('sheet', 'cb-mini') : ''}${this.shares.has(n.path) ? `<span class="cb-shared-mark" title="Shared with a link">${icon('link', 'cb-mini')}</span>` : ''}</div>
       ${snip ? `<div class="cb-item-snip">${esc(snip)}</div>` : ''}
       <div class="cb-item-meta">${showFolder && dirname(n.path) ? `<span class="cb-item-folder">${icon('folder')}${esc(dirname(n.path))}</span>` : ''}<span>${esc(friendlyDate(n.updated, { withTime: false }))}</span>${n.tags.map(t => `<span class="cb-tagdot" style="--tag:${this.store.tagColour(t)}" title="${esc(t)}"></span>`).join('')}</div>
     </button>`;
@@ -787,6 +789,7 @@ class App {
       <button type="button" class="cb-pop-item" data-act="move">${icon('move')}Move to folder…</button>
       <button type="button" class="cb-pop-item" data-act="history" ${n.path ? '' : 'disabled'}>${icon('history')}Revision history</button>
       <button type="button" class="cb-pop-item" data-act="file">${icon('code')}Show stored file</button>
+      ${this.hosted ? `<button type="button" class="cb-pop-item" data-act="share" ${n.path ? '' : 'disabled'}>${icon('link')}Share link…</button>` : ''}
       ${n.path ? `<a class="cb-pop-item" href="${esc(this.githubUrl(n.path))}" target="_blank" rel="noopener">${icon('link')}Open on GitHub</a>` : ''}
       <div class="cb-pop-sep"></div>
       <button type="button" class="cb-pop-item cb-danger" data-act="delete">${icon('trash')}Delete note</button>`, pop => {
@@ -803,6 +806,7 @@ class App {
         }
         if (act === 'history') this.showHistory();
         if (act === 'file') this.showFile();
+        if (act === 'share') this.shareDialog(this.store.notes.get(n.path) || n);
         if (act === 'delete') this.deleteNote();
       });
     });
@@ -814,6 +818,7 @@ class App {
       if (isCurrent && !(await this.flush())) return;
       const fresh = this.store.notes.get(note.path) || note;
       const moved = await this.store.moveNote(fresh, folder);
+      if (this.shares.has(fresh.path)) this.shareApi({ action: 'repath', path: fresh.path, to: moved.path });
       if (folder) this.expanded.add(folder);
       if (isCurrent) { this.current = moved; local.set(`cb:last:${this.repoKey}`, moved.path); this.renderMeta(); }
       this.renderSidebar();
@@ -919,6 +924,7 @@ class App {
     if (this.current?.path?.startsWith(from + '/') && !(await this.flush())) return;
     const curPath = this.current?.path;
     await this.store.renameFolder(from, to);
+    if ([...this.shares.keys()].some(p => p.startsWith(from + '/'))) this.shareApi({ action: 'repath', path: from, to, folder: true });
     const remap = f => (f === from || f.startsWith(from + '/') ? to + f.slice(from.length) : f);
     this.expanded = new Set([...this.expanded].map(remap));
     this.expanded.add(to);
@@ -1208,6 +1214,143 @@ class App {
 
   // ---------------------------------------------------------------- menus
 
+  // ---------------------------------------------------------------- share links (hosted only)
+
+  async shareApi(body) {
+    const r = await fetch('api/shares.php', {
+      method: body ? 'POST' : 'GET',
+      headers: { 'X-Commitbook': '1', ...(body ? { 'Content-Type': 'application/json' } : {}) },
+      credentials: 'same-origin',
+      body: body ? JSON.stringify(body) : undefined,
+    });
+    const j = await r.json().catch(() => ({}));
+    if (!r.ok) throw new Error(j.message || 'The share links couldn’t be updated.');
+    this.shareList = j.shares || [];
+    this.shares = new Map();
+    for (const sh of this.shareList) {
+      if (!this.shares.has(sh.path)) this.shares.set(sh.path, []);
+      this.shares.get(sh.path).push(sh);
+    }
+    this.renderSidebar();
+    return this.shareList;
+  }
+
+  loadShares() { this.shareApi().catch(() => {}); }
+
+  shareUrl(token) { return `${location.origin}${location.pathname.replace(/[^/]*$/, '')}s/${token}`; }
+
+  expiryText(sh) {
+    return sh.expires ? `Stops working ${longDate(new Date(sh.expires * 1000).toISOString())}` : 'Doesn’t expire';
+  }
+
+  /** Copy a link, falling back to selecting it if the browser won't allow copying. */
+  async copyLink(input) {
+    try { await navigator.clipboard.writeText(input.value); toast('Link copied.'); } catch { input.focus(); input.select(); toast('Press ⌘C to copy the link.'); }
+  }
+
+  shareDialog(note) {
+    if (!note?.path) return;
+    const wrap = document.createElement('div');
+    wrap.className = 'cb-modal';
+    wrap.innerHTML = '<div class="cb-modal-box cb-modal-wide" role="dialog" aria-modal="true" aria-labelledby="cb-share-title"></div>';
+    document.body.appendChild(wrap);
+    const box = $('.cb-modal-box', wrap);
+    const close = () => wrap.remove();
+    const render = () => {
+      const links = this.shares.get(note.path) || [];
+      box.innerHTML = `
+        <h3 id="cb-share-title">Share “${esc(note.title)}”</h3>
+        ${links.length ? links.map(sh => `
+          <div class="cb-share-row" data-token="${esc(sh.token)}">
+            <div class="cb-share-link"><input readonly value="${esc(this.shareUrl(sh.token))}" aria-label="Share link"><button type="button" class="cb-btn cb-btn-primary cb-btn-small" data-act="copy">Copy</button></div>
+            <div class="cb-share-meta"><span>${esc(this.expiryText(sh))}</span>
+              <a class="cb-linkbtn" href="${esc(this.shareUrl(sh.token))}" target="_blank" rel="noopener">Open</a>
+              <button type="button" class="cb-linkbtn cb-danger-link" data-act="revoke">Stop sharing</button></div>
+          </div>`).join('')
+        : `<p class="cb-text">Anyone with the link can read this note, always as it is now, but not change it or see your other notes. The link is long and random, so it can’t be guessed. You can stop sharing at any time.</p>`}
+        <div class="cb-share-new">
+          ${links.length ? '<p class="cb-help">Need a separate link, for example to stop sharing with one person later?</p>' : ''}
+          <label class="cb-field"><span>Link stops working</span>
+            <select name="days"><option value="0">Never</option><option value="1">After 1 day</option><option value="7">After 1 week</option><option value="30">After 1 month</option><option value="365">After 1 year</option></select></label>
+          <button type="button" class="cb-btn ${links.length ? '' : 'cb-btn-primary'}" data-act="create">${icon('link')}${links.length ? 'Make another link' : 'Make a share link'}</button>
+        </div>
+        <p class="cb-error" hidden></p>
+        <div class="cb-row"><button type="button" class="cb-btn" data-act="close">Done</button></div>`;
+    };
+    const fail = msg => { const p = $('.cb-error', box); p.textContent = msg; p.hidden = false; };
+    render();
+    wrap.addEventListener('keydown', e => { if (e.key === 'Escape') close(); });
+    wrap.addEventListener('mousedown', e => { if (e.target === wrap) close(); });
+    box.addEventListener('click', async e => {
+      const act = e.target.closest('[data-act]')?.dataset.act;
+      if (!act) return;
+      const row = e.target.closest('[data-token]');
+      try {
+        if (act === 'close') close();
+        if (act === 'copy') await this.copyLink($('input', row));
+        if (act === 'create') {
+          await this.shareApi({ action: 'create', path: note.path, title: note.title, created: note.created || note.data?.created || '', days: Number($('select[name="days"]', box).value) });
+          render();
+          const inputs = box.querySelectorAll('.cb-share-link input');
+          const fresh = inputs[inputs.length - 1];
+          if (fresh) await this.copyLink(fresh);
+        }
+        if (act === 'revoke') {
+          const ok = await confirmBox({ title: 'Stop sharing this link?', text: 'Anyone who has it will no longer be able to see the note. This can’t be undone, but you can make a new link.', ok: 'Stop sharing', danger: true });
+          if (!ok) return;
+          await this.shareApi({ action: 'revoke', token: row.dataset.token });
+          render();
+          toast('Sharing stopped for that link.');
+        }
+      } catch (err) { fail(err.message); }
+    });
+    $('[data-act="create"], [data-act="copy"]', box)?.focus();
+  }
+
+  async sharesList() {
+    try { await this.shareApi(); } catch (e) { toast(e.message, { error: true }); return; }
+    const wrap = document.createElement('div');
+    wrap.className = 'cb-modal';
+    wrap.innerHTML = '<div class="cb-modal-box cb-modal-wide" role="dialog" aria-modal="true" aria-labelledby="cb-shares-title"></div>';
+    document.body.appendChild(wrap);
+    const box = $('.cb-modal-box', wrap);
+    const close = () => wrap.remove();
+    const render = () => {
+      box.innerHTML = `
+        <h3 id="cb-shares-title">Shared links</h3>
+        ${this.shareList.length ? `<div class="cb-shares">${this.shareList.map(sh => {
+          const n = this.store.notes.get(sh.path);
+          return `<div class="cb-share-row" data-token="${esc(sh.token)}">
+            <div class="cb-share-title">${esc(n ? n.title : sh.title || sh.path)}${n ? '' : ' <span class="cb-badge">Not found</span>'}</div>
+            <div class="cb-share-link"><input readonly value="${esc(this.shareUrl(sh.token))}" aria-label="Share link"><button type="button" class="cb-btn cb-btn-small" data-act="copy">Copy</button></div>
+            <div class="cb-share-meta"><span>Shared ${esc(friendlyDate(new Date(sh.made * 1000).toISOString()))}</span><span>${esc(this.expiryText(sh))}</span>
+              ${n ? `<button type="button" class="cb-linkbtn" data-act="open" data-path="${esc(n.path)}">Open note</button>` : ''}
+              <button type="button" class="cb-linkbtn cb-danger-link" data-act="revoke">Stop sharing</button></div>
+          </div>`;
+        }).join('')}</div>` : '<p class="cb-text">You’re not sharing any notes. To share one, open it and choose ⋯ → Share link.</p>'}
+        <div class="cb-row"><button type="button" class="cb-btn" data-act="close">Done</button></div>`;
+    };
+    render();
+    wrap.addEventListener('keydown', e => { if (e.key === 'Escape') close(); });
+    wrap.addEventListener('mousedown', e => { if (e.target === wrap) close(); });
+    box.addEventListener('click', async e => {
+      const t = e.target.closest('[data-act]');
+      if (!t) return;
+      const row = e.target.closest('[data-token]');
+      try {
+        if (t.dataset.act === 'close') close();
+        if (t.dataset.act === 'copy') await this.copyLink($('input', row));
+        if (t.dataset.act === 'open') { close(); await this.openNote(this.store.notes.get(t.dataset.path)); }
+        if (t.dataset.act === 'revoke') {
+          const ok = await confirmBox({ title: 'Stop sharing this link?', text: 'Anyone who has it will no longer be able to see the note.', ok: 'Stop sharing', danger: true });
+          if (!ok) return;
+          await this.shareApi({ action: 'revoke', token: row.dataset.token });
+          render();
+        }
+      } catch (err) { toast(err.message, { error: true }); }
+    });
+  }
+
   mainMenu(anchor) {
     const theme = getTheme();
     const seg = (id, label, ic) => `<button type="button" data-theme-choice="${id}" aria-pressed="${theme === id}">${icon(ic)}${label}</button>`;
@@ -1219,6 +1362,7 @@ class App {
       <button type="button" class="cb-pop-item" data-act="tags">${icon('tag')}Manage tags</button>
       <button type="button" class="cb-pop-item" data-act="trash">${icon('trash')}Trash</button>
       <button type="button" class="cb-pop-item" data-act="refresh">${icon('refresh')}Check for changes</button>
+      ${this.hosted ? `<button type="button" class="cb-pop-item" data-act="shares">${icon('link')}Shared links</button>` : ''}
       <div class="cb-pop-sep"></div>
       <a class="cb-pop-item" href="https://github.com/${esc(this.settings.owner)}/${esc(this.settings.repo)}" target="_blank" rel="noopener">${icon('link')}Open repository on GitHub</a>
       ${this.hosted ? `<button type="button" class="cb-pop-item" data-act="server">${icon('settings')}Sign-in and GitHub settings</button>` : ''}
@@ -1239,6 +1383,7 @@ class App {
         if (act === 'refresh') { await this.checkForChanges(); toast('Up to date.'); }
         if (act === 'signout') this.signOut();
         if (act === 'server') this.serverSettings();
+        if (act === 'shares') this.sharesList();
       });
     });
   }

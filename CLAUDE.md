@@ -32,6 +32,10 @@ side in `public/api/` keeps the access key and provides the sign-in page.
   `github.php` must keep allowing only the configured repository and the API paths the app
   uses. Settings live outside the web folder (`cb_data_dir()`); never write secrets inside it.
   `src/main.js` detects hosted mode by asking `api/session.php`.
+- Share links (hosted only): `api/shares.php` (owner: list, create, revoke, repath),
+  `api/shared.php` (public: one note by token, front matter stripped, 15-second cache) and
+  `s/index.php` (serves the app page with a `cb-share` meta tag; `src/share-view.js` shows it).
+  Tokens are 40 hex characters. Shares follow moved notes by file name plus `created` date.
 - Releases: push a tag `vX.Y.Z` (matching `package.json` and `CB_VERSION` in `lib.php`) and the
   `Release` workflow attaches `commitbook-X.Y.Z.zip`.
 

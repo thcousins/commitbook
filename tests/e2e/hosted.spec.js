@@ -98,3 +98,39 @@ test('server settings dialog', async ({ page }) => {
   await page.click('#cb-ss .cb-btn-primary');
   await expect(page.locator('.cb-toast')).toContainText('Nothing changed');
 });
+
+test('share a note with a link, then stop sharing', async ({ page, browser }) => {
+  await signIn(page);
+  await page.locator('.cb-item', { hasText: 'Gift ideas' }).click();
+  await page.locator('#cb-note-menu').click();
+  await page.locator('.cb-pop-item', { hasText: 'Share link' }).click();
+  await expect(page.locator('.cb-modal')).toContainText('can’t be guessed');
+  await page.locator('.cb-modal [data-act="create"]').click();
+  const linkInput = page.locator('.cb-modal .cb-share-link input');
+  await expect(linkInput).toHaveValue(/\/s\/[0-9a-f]{40}$/);
+  const url = await linkInput.inputValue();
+  await shot(page, '04-share-dialog');
+  await page.locator('.cb-modal [data-act="close"]').click();
+  await expect(page.locator('.cb-item', { hasText: 'Gift ideas' }).locator('.cb-shared-mark')).toBeVisible();
+
+  // Someone else opens it: no sign-in, just the one note, read-only.
+  const other = await browser.newContext();
+  const guest = await other.newPage();
+  await guest.goto(url);
+  await expect(guest.locator('.cb-title-static')).toHaveText('Gift ideas');
+  await expect(guest.locator('.cb-shared-body')).toContainText('Lego Technic set');
+  await expect(guest.locator('.cb-shared-body .tiptap')).toHaveAttribute('contenteditable', 'false');
+  await expect(guest.locator('#cb-login, .cb-side')).toHaveCount(0);
+  await guest.screenshot({ path: `${SHOTS}/hosted-05-shared-page.png` });
+
+  // The owner stops sharing; the link no longer works.
+  await page.locator('#cb-menu').click();
+  await page.locator('.cb-pop-item', { hasText: 'Shared links' }).click();
+  await expect(page.locator('.cb-modal .cb-share-row')).toHaveCount(1);
+  await page.locator('.cb-modal [data-act="revoke"]').click();
+  await page.locator('.cb-modal [data-ok]').click();
+  await expect(page.locator('.cb-modal .cb-share-row')).toHaveCount(0);
+  await guest.reload();
+  await expect(guest.locator('.cb-empty h2')).toHaveText('This note isn’t available');
+  await other.close();
+});

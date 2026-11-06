@@ -481,3 +481,25 @@ code { font-family: var(--mono); font-size: 0.88em; }
 .cb-day[open] > summary .cb-chev .ic { rotate: 90deg; }
 .cb-day-label { flex: 1; }
 .cb-day .cb-versions { margin: 2px 0 6px 20px; }
+
+/* ---------- share links ---------- */
+.cb-shared-mark { display: inline-flex; color: var(--muted); }
+.cb-shared-mark .ic { color: var(--muted); }
+.cb-share-row { display: grid; gap: 6px; padding: 10px 0; border-bottom: 1px solid var(--line); }
+.cb-share-title { font-weight: 600; }
+.cb-share-link { display: flex; gap: 6px; }
+.cb-share-link input { flex: 1; min-width: 0; height: 32px; padding: 0 10px; border: 1px solid var(--line-strong); border-radius: 7px; background: var(--bg); font-family: var(--mono); font-size: 12.5px; color: var(--fg); }
+.cb-share-meta { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 14px; font-size: 12.5px; color: var(--faint); }
+.cb-danger-link { color: var(--danger); }
+.cb-share-new { display: grid; gap: 8px; margin-top: 14px; justify-items: start; }
+.cb-share-new .cb-field { margin: 0; }
+.cb-share-new select { height: 34px; padding: 0 8px; border: 1px solid var(--line-strong); border-radius: 8px; background: var(--bg); color: var(--fg); }
+.cb-shares { max-height: 60vh; overflow-y: auto; }
+
+/* the page someone sees when they open a share link */
+.cb-shared { min-height: 100%; overflow-y: auto; height: 100%; display: flex; flex-direction: column; }
+.cb-shared-page { flex: 1; width: 100%; max-width: 860px; margin: 0 auto; padding: 40px max(20px, env(safe-area-inset-right, 0px)) 60px max(20px, env(safe-area-inset-left, 0px)); }
+.cb-shared-page .cb-meta { margin-bottom: 24px; }
+.cb-shared-page .cb-editor .tiptap { min-height: 0; }
+.cb-shared-foot { display: flex; align-items: center; justify-content: center; gap: 6px; padding: 16px; padding-bottom: max(16px, env(safe-area-inset-bottom, 0px)); color: var(--faint); font-size: 12.5px; border-top: 1px solid var(--line); }
+.cb-shared-foot .ic { width: 15px; height: 15px; }

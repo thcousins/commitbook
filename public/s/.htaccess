@@ -1,0 +1,7 @@
+# Share links: /s/<token> shows that shared note.
+Options -Indexes
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+  RewriteCond %{REQUEST_FILENAME} !-f
+  RewriteRule ^([0-9a-f]{40})/?$ index.php?t=$1 [L,QSA]
+</IfModule>
